@@ -24,6 +24,7 @@ fun runCommand(command: String): String {
 }
 
 val supportedAbis = setOf("armeabi-v7a", "arm64-v8a", "x86")
+val composeVersion = "1.2.0-alpha08"
 
 android {
     compileSdk = AndroidVersions.compileSdk
@@ -85,6 +86,12 @@ android {
 
     buildFeatures {
         viewBinding = true
+        compose = true
+
+        // Disable some unused things
+        aidl = false
+        renderScript = false
+        shaders = false
     }
 
     flavorDimensions.add("default")
@@ -105,6 +112,10 @@ android {
         checkReleaseBuilds = false
     }
 
+    composeOptions {
+        kotlinCompilerExtensionVersion = composeVersion
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
@@ -116,6 +127,17 @@ android {
 }
 
 dependencies {
+    // Compose
+    implementation("androidx.activity:activity-compose:1.5.0-beta01")
+    implementation("androidx.compose.foundation:foundation:$composeVersion")
+    implementation("androidx.compose.animation:animation:$composeVersion")
+    implementation("androidx.compose.ui:ui:$composeVersion")
+    implementation("androidx.compose.ui:ui-tooling:$composeVersion")
+    implementation("androidx.compose.material3:material3:1.0.0-alpha10")
+    implementation("com.google.android.material:compose-theme-adapter-3:1.0.7")
+    implementation("androidx.compose.material:material-icons-extended:$composeVersion")
+    implementation("com.google.accompanist:accompanist-webview:0.24.6-alpha")
+
     // Modified dependencies
     implementation("com.github.jays2kings:subsampling-scale-image-view:756849e") {
         exclude(module = "image-decoder")
@@ -284,6 +306,9 @@ tasks {
             "-opt-in=kotlinx.coroutines.InternalCoroutinesApi",
             "-opt-in=kotlinx.serialization.ExperimentalSerializationApi",
             "-opt-in=coil.annotation.ExperimentalCoilApi",
+            "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
+            "-opt-in=androidx.compose.ui.ExperimentalComposeUiApi",
+            "-opt-in=androidx.compose.foundation.ExperimentalFoundationApi",
         )
     }
 

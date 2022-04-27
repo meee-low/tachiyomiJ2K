@@ -1,53 +1,161 @@
 package eu.kanade.tachiyomi.ui.more
 
 import android.app.Dialog
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.text.method.LinkMovementMethod
 import android.view.View
 import android.widget.TextView
-import androidx.core.content.getSystemService
-import androidx.core.net.toUri
-import androidx.preference.PreferenceScreen
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
+import eu.kanade.presentation.more.AboutScreen
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.data.updater.AppUpdateChecker
 import eu.kanade.tachiyomi.data.updater.AppUpdateNotifier
 import eu.kanade.tachiyomi.data.updater.AppUpdateResult
 import eu.kanade.tachiyomi.data.updater.AppUpdateService
-import eu.kanade.tachiyomi.data.updater.RELEASE_URL
+import eu.kanade.tachiyomi.ui.base.controller.BasicComposeController
 import eu.kanade.tachiyomi.ui.base.controller.DialogController
-import eu.kanade.tachiyomi.ui.setting.SettingsController
-import eu.kanade.tachiyomi.ui.setting.add
-import eu.kanade.tachiyomi.ui.setting.onClick
-import eu.kanade.tachiyomi.ui.setting.preference
-import eu.kanade.tachiyomi.ui.setting.preferenceCategory
-import eu.kanade.tachiyomi.ui.setting.titleRes
-import eu.kanade.tachiyomi.util.CrashLogUtil
 import eu.kanade.tachiyomi.util.lang.toTimestampString
-import eu.kanade.tachiyomi.util.system.isOnline
-import eu.kanade.tachiyomi.util.system.localeContext
+import eu.kanade.tachiyomi.util.system.launchNow
 import eu.kanade.tachiyomi.util.system.materialAlertDialog
+import eu.kanade.tachiyomi.util.system.pxToDp
 import eu.kanade.tachiyomi.util.system.toast
-import eu.kanade.tachiyomi.util.view.openInBrowser
-import eu.kanade.tachiyomi.util.view.snack
+import eu.kanade.tachiyomi.util.view.fullAppBarHeight
 import io.noties.markwon.Markwon
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import timber.log.Timber
+import uy.kohesive.injekt.injectLazy
 import java.text.DateFormat
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
 
-class AboutController : SettingsController() {
+class AboutController : BasicComposeController() {
 
+    private val preferences: PreferencesHelper by injectLazy()
+    private val updateChecker by lazy { AppUpdateChecker() }
+
+    override fun getTitle() = resources?.getString(R.string.about)
+
+    private val dateFormat: DateFormat by lazy {
+        preferences.dateFormat()
+    }
+
+    @Composable
+    override fun ComposeContent(nestedScrollInterop: NestedScrollConnection) {
+        AboutScreen(
+            nestedScrollInterop = nestedScrollInterop,
+            checkVersion = this::checkVersion,
+            getFormattedBuildTime = this::getFormattedBuildTime,
+            onClickLicenses = { startActivity(Intent(activity, OssLicensesMenuActivity::class.java)) },
+            topPadding = fullAppBarHeight!!.pxToDp,
+            scrolled = { index, offset ->
+                offset
+            }
+        )
+    }
+
+    /**
+     * Checks version and shows a user prompt if an update is available.
+     */
+    private fun checkVersion() {
+        if (activity == null) return
+
+        activity!!.toast(R.string.searching_for_updates)
+
+        launchNow {
+            try {
+                when (val result = updateChecker.checkForUpdate(activity!!, isUserPrompt = true)) {
+                    is AppUpdateResult.NewUpdate -> {
+                        val body = result.release.info
+                        val url = result.release.downloadLink
+                        val isBeta = result.release.preRelease == true
+
+                        // Create confirmation window
+                        AppUpdateNotifier.releasePageUrl = result.release.releaseLink
+                        NewUpdateDialogController(body, url, isBeta).showDialog(router)
+                    }
+                    is AppUpdateResult.NoNewUpdate -> {
+                        activity?.toast(R.string.no_new_updates_available)
+                    }
+                }
+            } catch (error: Exception) {
+                activity?.toast(error.message)
+                Timber.e(error)
+            }
+        }
+    }
+
+    private fun getFormattedBuildTime(): String {
+        try {
+            val inputDf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.getDefault())
+            inputDf.timeZone = TimeZone.getTimeZone("UTC")
+            val buildTime = inputDf.parse(BuildConfig.BUILD_TIME) ?: return BuildConfig.BUILD_TIME
+
+            return buildTime.toTimestampString(dateFormat)
+        } catch (e: ParseException) {
+            return BuildConfig.BUILD_TIME
+        }
+    }
+
+    class NewUpdateDialogController(bundle: Bundle? = null) : DialogController(bundle) {
+
+        constructor(body: String, url: String, isBeta: Boolean?) : this(
+            Bundle().apply {
+                putString(BODY_KEY, body)
+                putString(URL_KEY, url)
+                putBoolean(IS_BETA, isBeta == true)
+            }
+        )
+
+        override fun onCreateDialog(savedViewState: Bundle?): Dialog {
+            val releaseBody = (args.getString(BODY_KEY) ?: "")
+                .replace("""---(\R|.)*Checksums(\R|.)*""".toRegex(), "")
+            val info = Markwon.create(activity!!).toMarkdown(releaseBody)
+
+            val isOnA12 = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+            val isBeta = args.getBoolean(IS_BETA, false)
+            return activity!!.materialAlertDialog()
+                .setTitle(
+                    if (isBeta) {
+                        R.string.new_beta_version_available
+                    } else {
+                        R.string.new_version_available
+                    }
+                )
+                .setMessage(info)
+                .setPositiveButton(if (isOnA12) R.string.update else R.string.download) { _, _ ->
+                    val appContext = applicationContext
+                    if (appContext != null) {
+                        // Start download
+                        val url = args.getString(URL_KEY) ?: ""
+                        AppUpdateService.start(appContext, url, true)
+                    }
+                }
+                .setNegativeButton(R.string.ignore, null)
+                .create()
+        }
+
+        override fun onAttach(view: View) {
+            super.onAttach(view)
+            (dialog?.findViewById(android.R.id.message) as? TextView)?.movementMethod =
+                LinkMovementMethod.getInstance()
+        }
+
+        companion object {
+            const val BODY_KEY = "NewUpdateDialogController.body"
+            const val URL_KEY = "NewUpdateDialogController.key"
+            const val IS_BETA = "NewUpdateDialogController.is_beta"
+        }
+    }
+}
+
+/*
     /**
      * Checks for new releases
      */
@@ -243,3 +351,4 @@ class AboutController : SettingsController() {
         }
     }
 }
+*/
