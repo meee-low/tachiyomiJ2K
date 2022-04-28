@@ -11,6 +11,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshotFlow
+import com.bluelinelabs.conductor.ControllerChangeHandler
+import com.bluelinelabs.conductor.ControllerChangeType
 import eu.kanade.presentation.theme.TachiyomiTheme
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.databinding.ComposeControllerBinding
@@ -20,6 +22,7 @@ import eu.kanade.tachiyomi.ui.main.TabbedInterface
 import eu.kanade.tachiyomi.util.system.ImageUtil
 import eu.kanade.tachiyomi.util.system.dpToPx
 import eu.kanade.tachiyomi.util.system.getResourceColor
+import eu.kanade.tachiyomi.util.system.launchUI
 import eu.kanade.tachiyomi.util.system.toInt
 import eu.kanade.tachiyomi.util.view.activityBinding
 import eu.kanade.tachiyomi.util.view.backgroundColor
@@ -27,6 +30,7 @@ import eu.kanade.tachiyomi.util.view.fullAppBarHeightAndPadding
 import eu.kanade.tachiyomi.util.view.setAppBarBG
 import kotlinx.coroutines.flow.distinctUntilChanged
 import nucleus.presenter.Presenter
+import kotlin.random.Random
 
 /**
  * Compose controller with a Nucleus presenter.
@@ -67,32 +71,37 @@ abstract class BasicComposeController : BaseController<ComposeControllerBinding>
     override fun createBinding(inflater: LayoutInflater): ComposeControllerBinding =
         ComposeControllerBinding.inflate(inflater)
 
+    private var isToolbarColor = false
+    var toolbarColorAnim: ValueAnimator? = null
+    private val randomTag = Random.nextLong()
+    var listState: LazyListState? = null
+
+    fun colorToolbar(isColored: Boolean) {
+        isToolbarColor = isColored
+        val includeTabView = this is TabbedInterface
+        toolbarColorAnim?.cancel()
+        val floatingBar =
+            (this as? FloatingSearchInterface)?.showFloatingBar() == true && !includeTabView
+        if (floatingBar) {
+            setAppBarBG(isColored.toInt().toFloat(), includeTabView)
+            return
+        }
+        val percent = ImageUtil.getPercentOfColor(
+            activityBinding!!.appBar.backgroundColor ?: Color.TRANSPARENT,
+            activity!!.getResourceColor(R.attr.colorSurface),
+            activity!!.getResourceColor(R.attr.colorPrimaryVariant)
+        )
+        toolbarColorAnim = ValueAnimator.ofFloat(percent, isColored.toInt().toFloat())
+        toolbarColorAnim?.addUpdateListener { valueAnimator ->
+            setAppBarBG(valueAnimator.animatedValue as Float, includeTabView)
+        }
+        toolbarColorAnim?.start()
+    }
+
     override fun onViewCreated(view: View) {
         super.onViewCreated(view)
 
-        var toolbarColorAnim: ValueAnimator? = null
-        var isToolbarColor = false
         val includeTabView = this is TabbedInterface
-        val colorToolbar: (Boolean) -> Unit = f@{ isColored ->
-            isToolbarColor = isColored
-            toolbarColorAnim?.cancel()
-            val floatingBar =
-                (this as? FloatingSearchInterface)?.showFloatingBar() == true && !includeTabView
-            if (floatingBar) {
-                setAppBarBG(isColored.toInt().toFloat(), includeTabView)
-                return@f
-            }
-            val percent = ImageUtil.getPercentOfColor(
-                activityBinding!!.appBar.backgroundColor ?: Color.TRANSPARENT,
-                activity!!.getResourceColor(R.attr.colorSurface),
-                activity!!.getResourceColor(R.attr.colorPrimaryVariant)
-            )
-            toolbarColorAnim = ValueAnimator.ofFloat(percent, isColored.toInt().toFloat())
-            toolbarColorAnim?.addUpdateListener { valueAnimator ->
-                setAppBarBG(valueAnimator.animatedValue as Float, includeTabView)
-            }
-            toolbarColorAnim?.start()
-        }
 
         val tabBarHeight = 48.dpToPx
         val atTopOfRecyclerView: (Int) -> Boolean = f@{ offset ->
@@ -105,8 +114,24 @@ abstract class BasicComposeController : BaseController<ComposeControllerBinding>
                 activityBinding.toolbar.height - if (includeTabView) tabBarHeight else 0
         }
 
+        activityBinding?.appBar?.lockYPos = false
+        activityBinding?.appBar?.y = 0f
+        activityBinding?.appBar?.useTabsInPreLayout = includeTabView
+        activityBinding?.appBar?.setToolbarModeBy(this)
+
+//        var appBarHeight = (
+//                if (fullAppBarHeight ?: 0 > 0) fullAppBarHeight!!
+//                else activityBinding?.appBar?.preLayoutHeight ?: 0
+//                )
+//        activityBinding!!.appBar.doOnLayout {
+//            if (fullAppBarHeight!! > 0) {
+//                appBarHeight = fullAppBarHeight!!
+//            }
+//        }
+
         binding.root.setContent {
             val listState = rememberLazyListState()
+            this.listState = listState
             var oldOffset = 0
             val childSizesMap = HashMap<Int, Int>()
             activityBinding!!.appBar.y = 0f
@@ -146,6 +171,28 @@ abstract class BasicComposeController : BaseController<ComposeControllerBinding>
             TachiyomiTheme {
                 ComposeContent(listState)
             }
+        }
+    }
+
+    override fun onChangeStarted(handler: ControllerChangeHandler, type: ControllerChangeType) {
+        super.onChangeStarted(handler, type)
+        if (type.isEnter) {
+            activityBinding?.appBar?.hideBigView(
+                this is SmallToolbarInterface,
+                setTitleAlpha = false // this !is MangaDetailsController
+            )
+            activityBinding?.appBar?.setToolbarModeBy(this)
+            activityBinding?.appBar?.useTabsInPreLayout = this is TabbedInterface
+            colorToolbar(isToolbarColor)
+            activityBinding!!.toolbar.tag = randomTag
+            activityBinding!!.toolbar.setOnClickListener {
+                viewScope.launchUI {
+                    listState?.animateScrollToItem(0)
+                }
+            }
+        } else {
+            toolbarColorAnim?.cancel()
+            if (activityBinding!!.toolbar.tag == randomTag) activityBinding!!.toolbar.setOnClickListener(null)
         }
     }
 

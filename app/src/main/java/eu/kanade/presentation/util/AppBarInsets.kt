@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.LayoutDirection
 @Stable
 class AppBarInsets(
     val insets: WindowInsets,
-    val appBarHeight: Int,
+    val appBarHeight: () -> Float,
     private val density: Density,
 ) : PaddingValues {
     override fun calculateLeftPadding(layoutDirection: LayoutDirection) = with(density) {
@@ -21,7 +21,7 @@ class AppBarInsets(
     }
 
     override fun calculateTopPadding() = with(density) {
-        insets.getTop(this).toDp() + Dp(appBarHeight.toFloat())
+        insets.getTop(this).toDp() + Dp(appBarHeight())
     }
 
     override fun calculateRightPadding(layoutDirection: LayoutDirection) = with(density) {
@@ -55,5 +55,5 @@ class AppBarInsets(
 
 @ReadOnlyComposable
 @Composable
-fun WindowInsets.asAppBarPaddingValues(appBarHeight: Int): PaddingValues =
+fun WindowInsets.asAppBarPaddingValues(appBarHeight: () -> Float): PaddingValues =
     AppBarInsets(this, appBarHeight, LocalDensity.current)

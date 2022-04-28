@@ -53,7 +53,7 @@ class AboutController : BasicComposeController() {
             checkVersion = this::checkVersion,
             getFormattedBuildTime = this::getFormattedBuildTime,
             onClickLicenses = { startActivity(Intent(activity, OssLicensesMenuActivity::class.java)) },
-            topPadding = fullAppBarHeight!!.pxToDp,
+            topPadding = { fullAppBarHeight!!.toFloat().pxToDp },
         )
     }
 

@@ -45,7 +45,7 @@ fun AboutScreen(
     checkVersion: () -> Unit,
     getFormattedBuildTime: () -> String,
     onClickLicenses: () -> Unit,
-    topPadding: Int,
+    topPadding: () -> Float,
 ) {
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
