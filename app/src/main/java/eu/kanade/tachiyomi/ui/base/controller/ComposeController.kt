@@ -186,9 +186,9 @@ abstract class BasicComposeController : BaseController<ComposeControllerBinding>
             colorToolbar(isToolbarColor)
             activityBinding!!.toolbar.tag = randomTag
             activityBinding!!.toolbar.setOnClickListener {
-                viewScope.launchUI {
-                    listState?.animateScrollToItem(0)
-                }
+//                viewScope.launchUI {
+//                    listState?.animateScrollToItem(0)
+//                }
             }
         } else {
             toolbarColorAnim?.cancel()

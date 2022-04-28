@@ -2,6 +2,7 @@ package eu.kanade.presentation.more
 
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -94,13 +95,13 @@ fun AboutScreen(
                             val clipboard = context.getSystemService<ClipboardManager>()!!
                             val appInfo = context.getString(R.string.app_info)
                             clipboard.setPrimaryClip(ClipData.newPlainText(appInfo, deviceInfo))
-//                            if (Build.VERSION.SDK_INT + Build.VERSION.PREVIEW_SDK_INT < 33) {
-                            coroutineScope.launch { // using the `coroutineScope` to `launch` showing the snackbar
-                                snackbarHostState.showSnackbar(
-                                    context.getString(R.string._copied_to_clipboard, appInfo),
-                                )
+                            if (Build.VERSION.SDK_INT + Build.VERSION.PREVIEW_SDK_INT < 33) {
+                                coroutineScope.launch { // using the `coroutineScope` to `launch` showing the snackbar
+                                    snackbarHostState.showSnackbar(
+                                        context.getString(R.string._copied_to_clipboard, appInfo),
+                                    )
+                                }
                             }
-//                            }
                         },
                     )
                 }
