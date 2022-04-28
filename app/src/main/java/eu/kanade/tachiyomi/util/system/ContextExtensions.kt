@@ -31,6 +31,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.browser.customtabs.CustomTabColorSchemeParams
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.browser.customtabs.CustomTabsService.ACTION_CUSTOM_TABS_CONNECTION
+import androidx.compose.ui.graphics.Color
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
@@ -115,6 +116,13 @@ fun Context.getResourceColor(@AttrRes resource: Int): Int {
     val attrValue = typedArray.getColor(0, 0)
     typedArray.recycle()
     return attrValue
+}
+
+fun Context.getComposeResourceColor(@AttrRes resource: Int): Color {
+    val typedArray = obtainStyledAttributes(intArrayOf(resource))
+    val attrValue = typedArray.getColor(0, 0)
+    typedArray.recycle()
+    return Color(attrValue)
 }
 
 /**

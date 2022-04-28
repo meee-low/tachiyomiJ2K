@@ -273,11 +273,20 @@ class ExpandedAppBarLayout@JvmOverloads constructor(context: Context, attrs: Att
      * @param cancelAnim if true, cancel the current snap animation
      */
     fun updateAppBarAfterY(recyclerView: RecyclerView?, cancelAnim: Boolean = true) {
+        val idle = RecyclerView.SCROLL_STATE_IDLE
+        updateAppBarAfterY(
+            recyclerView?.computeVerticalScrollOffset(),
+            recyclerView?.scrollState ?: idle <= idle,
+            cancelAnim,
+        )
+    }
+
+    fun updateAppBarAfterY(scrollOffset: Int?, isIdle: Boolean, cancelAnim: Boolean = true) {
         if (cancelAnim) {
             yAnimator?.cancel()
         }
         if (lockYPos) return
-        val offset = recyclerView?.computeVerticalScrollOffset() ?: 0
+        val offset = scrollOffset ?: 0
         val bigHeight = bigView?.height ?: 0
         val realHeight = preLayoutHeightWhileSearching + paddingTop
         val tabHeight = if (tabsFrameLayout?.isVisible == true) 48.dpToPx else 0
@@ -356,7 +365,7 @@ class ExpandedAppBarLayout@JvmOverloads constructor(context: Context, attrs: Att
         val mainActivity = mainActivity ?: return
         val useSearchToolbar = mainToolbar.alpha <= 0.025f
         val idle = RecyclerView.SCROLL_STATE_IDLE
-        if (if (useSearchToolbar) -y >= height || recyclerView?.scrollState ?: idle <= idle || context.isTablet()
+        if (if (useSearchToolbar) -y >= height || isIdle || context.isTablet()
             else mainActivity.currentToolbar == searchToolbar
         ) {
             useSearchToolbarForMenu(useSearchToolbar)

@@ -897,6 +897,7 @@
     <string name="helpful_translation_links">Helpful translation links</string>
     <string name="website">Website</string>
     <string name="open_source_licenses">Open source licenses</string>
+    <string name="privacy_policy">Privacy policy</string>
 
     <!-- Login/Logout dialog -->
     <string name="log_in_to_">Log in to %1$s</string>

@@ -2,36 +2,28 @@ package eu.kanade.presentation.more
 
 import android.content.ClipData
 import android.content.ClipboardManager
-import android.os.Build
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Public
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarVisuals
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
@@ -40,77 +32,47 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.getSystemService
 import eu.kanade.presentation.components.LinkIcon
 import eu.kanade.presentation.components.PreferenceRow
+import eu.kanade.presentation.util.asAppBarPaddingValues
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.updater.RELEASE_URL
 import eu.kanade.tachiyomi.util.CrashLogUtil
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 @Composable
 fun AboutScreen(
-    nestedScrollInterop: NestedScrollConnection,
+    listState: LazyListState,
     checkVersion: () -> Unit,
     getFormattedBuildTime: () -> String,
     onClickLicenses: () -> Unit,
     topPadding: Int,
-    scrolled: (Int, Int) -> Unit,
 ) {
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
-    val listState = rememberLazyListState()
-
-    class SnackbarVisualsWithError(
-        override val message: String,
-        val isError: Boolean
-    ) : SnackbarVisuals {
-        override val actionLabel: String
-            get() = if (isError) "Error" else "OK"
-        override val withDismissAction: Boolean
-            get() = false
-        override val duration: SnackbarDuration
-            get() = SnackbarDuration.Long
-    }
 
     Scaffold(
         snackbarHost = {
-            // reuse default SnackbarHost to have default animation and timing handling
-            SnackbarHost(snackbarHostState) { data ->
-                // custom snackbar with the custom action button color and border
-                val isError = (data.visuals as? SnackbarVisualsWithError)?.isError ?: false
-                val buttonColor = if (isError) {
-                    ButtonDefaults.textButtonColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer,
-                        contentColor = MaterialTheme.colorScheme.error
-                    )
-                } else {
-                    ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.inversePrimary
-                    )
-                }
-
+            SnackbarHost(
+                snackbarHostState,
+            ) { data ->
                 Snackbar(
                     modifier = Modifier
-                        .border(2.dp, MaterialTheme.colorScheme.secondary)
-                        .padding(12.dp),
-                    action = {
-                        TextButton(
-                            onClick = { if (isError) data.dismiss() else data.performAction() },
-                            colors = buttonColor
-                        ) { Text(data.visuals.actionLabel ?: "") }
-                    }
+                        .systemBarsPadding()
+                        .padding(10.dp),
                 ) {
-                    Text(data.visuals.message)
+                    Text(
+                        text = data.visuals.message,
+                        color = MaterialTheme.colorScheme.inverseOnSurface
+                    )
                 }
             }
         },
         content = {
             LazyColumn(
-                modifier = Modifier.nestedScroll(nestedScrollInterop),
                 state = listState,
-                contentPadding = PaddingValues(top = topPadding.dp)
+                contentPadding = WindowInsets.systemBars.asAppBarPaddingValues(topPadding),
             ) {
                 item {
                     LogoHeader()
@@ -132,17 +94,13 @@ fun AboutScreen(
                             val clipboard = context.getSystemService<ClipboardManager>()!!
                             val appInfo = context.getString(R.string.app_info)
                             clipboard.setPrimaryClip(ClipData.newPlainText(appInfo, deviceInfo))
-                            if (Build.VERSION.SDK_INT + Build.VERSION.PREVIEW_SDK_INT < 33) {
-                                coroutineScope.launch { // using the `coroutineScope` to `launch` showing the snackbar
-                                    // taking the `snackbarHostState` from the attached `scaffoldState`
-                                    snackbarHostState.showSnackbar(
-                                        SnackbarVisualsWithError(
-                                            context.getString(R.string._copied_to_clipboard, appInfo),
-                                            false
-                                        )
-                                    )
-                                }
+//                            if (Build.VERSION.SDK_INT + Build.VERSION.PREVIEW_SDK_INT < 33) {
+                            coroutineScope.launch { // using the `coroutineScope` to `launch` showing the snackbar
+                                snackbarHostState.showSnackbar(
+                                    context.getString(R.string._copied_to_clipboard, appInfo),
+                                )
                             }
+//                            }
                         },
                     )
                 }
@@ -190,12 +148,12 @@ fun AboutScreen(
                     )
                 }
 
-//                item {
-//                    PreferenceRow(
-//                        title = stringResource(R.string.pr),
-//                        onClick = { uriHandler.openUri("https://tachiyomi.org/privacy") },
-//                    )
-//                }
+                item {
+                    PreferenceRow(
+                        title = stringResource(R.string.privacy_policy),
+                        onClick = { uriHandler.openUri("https://tachiyomi.org/privacy") },
+                    )
+                }
 
                 item {
                     Row(
@@ -230,19 +188,11 @@ fun AboutScreen(
                         LinkIcon(
                             label = "GitHub",
                             painter = painterResource(R.drawable.ic_github_24dp),
-                            url = "https://github.com/tachiyomiorg",
+                            url = "https://github.com/Jays2Kings/tachiyomiJ2K",
                         )
                     }
                 }
             }
         }
     )
-
-    LaunchedEffect(listState) {
-        snapshotFlow { listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset }
-            .distinctUntilChanged()
-            .collect {
-                scrolled(it.first, it.second)
-            }
-    }
 }

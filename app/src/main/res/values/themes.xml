@@ -16,6 +16,7 @@
         <!--Standard Material colors -->
         <item name="colorPrimary">@color/primaryTachiyomi</item>
         <item name="colorPrimaryInverse">@color/primaryInverseTachiyomi</item>
+        <item name="colorOnSurfaceInverse">?android:textColorPrimaryInverse</item>
         <item name="colorPrimaryVariant">@color/primaryVariantTachiyomi</item>
         <item name="colorSurface">@color/background</item> //old colorSecondary
         <item name="colorSurfaceVariant">?colorPrimaryVariant</item> //old colorSecondary

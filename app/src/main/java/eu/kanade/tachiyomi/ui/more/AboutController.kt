@@ -7,8 +7,8 @@ import android.os.Bundle
 import android.text.method.LinkMovementMethod
 import android.view.View
 import android.widget.TextView
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 import eu.kanade.presentation.more.AboutScreen
 import eu.kanade.tachiyomi.BuildConfig
@@ -47,16 +47,13 @@ class AboutController : BasicComposeController() {
     }
 
     @Composable
-    override fun ComposeContent(nestedScrollInterop: NestedScrollConnection) {
+    override fun ComposeContent(listState: LazyListState) {
         AboutScreen(
-            nestedScrollInterop = nestedScrollInterop,
+            listState = listState,
             checkVersion = this::checkVersion,
             getFormattedBuildTime = this::getFormattedBuildTime,
             onClickLicenses = { startActivity(Intent(activity, OssLicensesMenuActivity::class.java)) },
             topPadding = fullAppBarHeight!!.pxToDp,
-            scrolled = { index, offset ->
-                offset
-            }
         )
     }
 
