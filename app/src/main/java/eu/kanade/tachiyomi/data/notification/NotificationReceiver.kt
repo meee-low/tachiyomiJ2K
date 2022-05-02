@@ -14,7 +14,7 @@ import eu.kanade.tachiyomi.data.database.models.Chapter
 import eu.kanade.tachiyomi.data.database.models.Manga
 import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.download.DownloadService
-import eu.kanade.tachiyomi.data.library.LibraryUpdateService
+import eu.kanade.tachiyomi.data.library.LibraryUpdateManager
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.data.updater.AppUpdateService
 import eu.kanade.tachiyomi.extension.ExtensionInstallService
@@ -170,7 +170,7 @@ class NotificationReceiver : BroadcastReceiver() {
      * @param notificationId id of notification
      */
     private fun cancelLibraryUpdate(context: Context) {
-        LibraryUpdateService.stop(context)
+        LibraryUpdateManager.stop(context)
         Handler().post { dismissNotification(context, Notifications.ID_LIBRARY_PROGRESS) }
     }
 

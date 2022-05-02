@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.core.net.toUri
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
+import androidx.work.ForegroundInfo
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkInfo
@@ -33,7 +34,7 @@ class BackupCreatorJob(private val context: Context, workerParams: WorkerParamet
         val flags = inputData.getInt(BACKUP_FLAGS_KEY, BackupConst.BACKUP_ALL)
         val isAutoBackup = inputData.getBoolean(IS_AUTO_BACKUP_KEY, true)
 
-        context.notificationManager.notify(Notifications.ID_BACKUP_PROGRESS, notifier.showBackupProgress().build())
+        setForegroundAsync(ForegroundInfo(Notifications.ID_BACKUP_PROGRESS, notifier.showBackupProgress().build()))
         return try {
             val location = FullBackupManager(context).createBackup(uri, flags, isAutoBackup)
             if (!isAutoBackup) notifier.showBackupComplete(UniFile.fromUri(context, location.toUri()))

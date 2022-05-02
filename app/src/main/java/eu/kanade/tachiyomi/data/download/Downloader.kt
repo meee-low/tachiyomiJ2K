@@ -16,7 +16,7 @@ import eu.kanade.tachiyomi.data.database.models.Chapter
 import eu.kanade.tachiyomi.data.database.models.Manga
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.data.download.model.DownloadQueue
-import eu.kanade.tachiyomi.data.library.LibraryUpdateService
+import eu.kanade.tachiyomi.data.library.LibraryUpdateManager
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.source.SourceManager
 import eu.kanade.tachiyomi.source.UnmeteredSource
@@ -298,7 +298,7 @@ class Downloader(
                     notifier.massDownloadWarning()
                 }
                 DownloadService.start(context)
-            } else if (!isRunning && !LibraryUpdateService.isRunning()) {
+            } else if (!isRunning && !LibraryUpdateManager.isRunning()) {
                 notifier.onDownloadPaused()
             }
         }

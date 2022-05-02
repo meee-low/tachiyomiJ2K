@@ -58,7 +58,8 @@ import eu.kanade.tachiyomi.data.database.models.LibraryManga
 import eu.kanade.tachiyomi.data.database.models.Manga
 import eu.kanade.tachiyomi.data.download.DownloadService
 import eu.kanade.tachiyomi.data.library.LibraryServiceListener
-import eu.kanade.tachiyomi.data.library.LibraryUpdateService
+import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
+import eu.kanade.tachiyomi.data.library.LibraryUpdateManager
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
@@ -643,7 +644,7 @@ class LibraryController(
     private fun setSwipeRefresh() = with(binding.swipeRefresh) {
         setOnRefreshListener {
             isRefreshing = false
-            if (!LibraryUpdateService.isRunning()) {
+            if (!LibraryUpdateManager.isRunning()) {
                 when {
                     !presenter.showAllCategories && presenter.groupType == BY_DEFAULT -> {
                         presenter.allCategories.find { it.id == presenter.currentCategory }?.let {
@@ -878,12 +879,12 @@ class LibraryController(
 
     private fun updateLibrary(category: Category? = null) {
         val view = view ?: return
-        LibraryUpdateService.start(view.context, category)
+        LibraryUpdateJob.run(view.context, category?.id ?: -1)
         snack = view.snack(R.string.updating_library) {
             anchorView = anchorView()
             view.elevation = 15f.dpToPx
             setAction(R.string.cancel) {
-                LibraryUpdateService.stop(context)
+                LibraryUpdateManager.stop(context)
                 viewScope.launchUI {
                     NotificationReceiver.dismissNotification(
                         context,
@@ -967,7 +968,7 @@ class LibraryController(
                 presenter.getLibrary()
             }
             DownloadService.callListeners()
-            LibraryUpdateService.setListener(this)
+            LibraryUpdateManager.setListener(this)
             binding.recyclerCover.isClickable = false
             binding.recyclerCover.isFocusable = false
             singleCategory = presenter.categories.size <= 1
@@ -1017,7 +1018,7 @@ class LibraryController(
     }
 
     override fun onDestroyView(view: View) {
-        LibraryUpdateService.removeListener(this)
+        LibraryUpdateManager.removeListener(this)
         destroyActionModeIfNeeded()
         if (isBindingInitialized) {
             binding.libraryGridRecycler.recycler.removeOnScrollListener(scrollListener)
@@ -1587,13 +1588,13 @@ class LibraryController(
 
     override fun updateCategory(position: Int): Boolean {
         val category = (adapter.getItem(position) as? LibraryHeaderItem)?.category ?: return false
-        val inQueue = LibraryUpdateService.categoryInQueue(category.id)
+        val inQueue = LibraryUpdateManager.categoryInQueue(category.id)
         snack?.dismiss()
         snack = view?.snack(
             resources!!.getString(
                 when {
                     inQueue -> R.string._already_in_queue
-                    LibraryUpdateService.isRunning() -> R.string.adding_category_to_queue
+                    LibraryUpdateManager.isRunning() -> R.string.adding_category_to_queue
                     else -> R.string.updating_
                 },
                 category.name,
@@ -1603,7 +1604,7 @@ class LibraryController(
             anchorView = anchorView()
             view.elevation = 15f.dpToPx
             setAction(R.string.cancel) {
-                LibraryUpdateService.stop(context)
+                LibraryUpdateManager.stop(context)
                 viewScope.launchUI {
                     NotificationReceiver.dismissNotification(
                         context,
@@ -1612,10 +1613,10 @@ class LibraryController(
                 }
             }
         }
-        if (!inQueue) LibraryUpdateService.start(
+        if (!inQueue) LibraryUpdateJob.run(
             view!!.context,
-            category,
-            mangaToUse = if (category.isDynamic) {
+            category.id ?: -1,
+            savedManga = if (category.isDynamic) {
                 presenter.getMangaInCategories(category.id)
             } else null,
         )

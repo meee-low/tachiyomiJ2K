@@ -35,7 +35,8 @@ import eu.kanade.tachiyomi.data.database.models.History
 import eu.kanade.tachiyomi.data.database.models.Manga
 import eu.kanade.tachiyomi.data.download.DownloadService
 import eu.kanade.tachiyomi.data.download.model.Download
-import eu.kanade.tachiyomi.data.library.LibraryUpdateService
+import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
+import eu.kanade.tachiyomi.data.library.LibraryUpdateManager
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.databinding.RecentsControllerBinding
@@ -342,9 +343,9 @@ class RecentsController(bundle: Bundle? = null) :
                 }
             },
         )
-        binding.swipeRefresh.isRefreshing = LibraryUpdateService.isRunning()
+        binding.swipeRefresh.isRefreshing = LibraryUpdateManager.isRunning()
         binding.swipeRefresh.setOnRefreshListener {
-            if (!LibraryUpdateService.isRunning()) {
+            if (!LibraryUpdateManager.isRunning()) {
                 snack?.dismiss()
                 snack = view.snack(R.string.updating_library) {
                     anchorView =
@@ -354,7 +355,7 @@ class RecentsController(bundle: Bundle? = null) :
                             activityBinding?.bottomNav ?: binding.downloadBottomSheet.root
                         }
                     setAction(R.string.cancel) {
-                        LibraryUpdateService.stop(context)
+                        LibraryUpdateManager.stop(context)
                         viewScope.launchUI {
                             NotificationReceiver.dismissNotification(
                                 context,
@@ -366,12 +367,12 @@ class RecentsController(bundle: Bundle? = null) :
                         object : BaseTransientBottomBar.BaseCallback<Snackbar>() {
                             override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
                                 super.onDismissed(transientBottomBar, event)
-                                binding.swipeRefresh.isRefreshing = LibraryUpdateService.isRunning()
+                                binding.swipeRefresh.isRefreshing = LibraryUpdateManager.isRunning()
                             }
                         },
                     )
                 }
-                LibraryUpdateService.start(view.context)
+                LibraryUpdateJob.run(view.context)
             }
         }
         ogRadius = view.resources.getDimension(R.dimen.rounded_radius)
@@ -520,7 +521,7 @@ class RecentsController(bundle: Bundle? = null) :
         if (view == null) return
         binding.progress.isVisible = false
         binding.frameLayout.alpha = 1f
-        binding.swipeRefresh.isRefreshing = LibraryUpdateService.isRunning()
+        binding.swipeRefresh.isRefreshing = LibraryUpdateManager.isRunning()
         adapter.removeAllScrollableHeaders()
         adapter.updateItems(recents)
         adapter.onLoadMoreComplete(null)

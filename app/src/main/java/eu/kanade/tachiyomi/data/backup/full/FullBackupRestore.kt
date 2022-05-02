@@ -14,7 +14,7 @@ import eu.kanade.tachiyomi.data.database.models.Chapter
 import eu.kanade.tachiyomi.data.database.models.Manga
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.library.CustomMangaManager
-import eu.kanade.tachiyomi.data.library.LibraryUpdateService
+import eu.kanade.tachiyomi.data.library.LibraryUpdateManager
 import okio.buffer
 import okio.gzip
 import okio.source
@@ -79,7 +79,7 @@ class FullBackupRestore(context: Context, notifier: BackupNotifier) : AbstractBa
 
         restoreProgress += 1
         showRestoreProgress(restoreProgress, restoreAmount, manga.title)
-        LibraryUpdateService.callListener(manga)
+        LibraryUpdateManager.callListener(manga)
     }
 
     /**

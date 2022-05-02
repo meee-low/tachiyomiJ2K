@@ -23,7 +23,7 @@ import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.data.download.model.DownloadQueue
 import eu.kanade.tachiyomi.data.library.CustomMangaManager
 import eu.kanade.tachiyomi.data.library.LibraryServiceListener
-import eu.kanade.tachiyomi.data.library.LibraryUpdateService
+import eu.kanade.tachiyomi.data.library.LibraryUpdateManager
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.data.track.EnhancedTrackService
 import eu.kanade.tachiyomi.data.track.TrackManager
@@ -118,7 +118,7 @@ class MangaDetailsPresenter(
         isLockedFromSearch = controller.shouldLockIfNeeded && SecureActivityDelegate.shouldBeLocked()
         headerItem.isLocked = isLockedFromSearch
         downloadManager.addListener(this)
-        LibraryUpdateService.setListener(this)
+        LibraryUpdateManager.setListener(this)
         tracks = db.getTracks(manga).executeAsBlocking()
         if (manga.source == LocalSource.ID) {
             refreshAll()
@@ -138,7 +138,7 @@ class MangaDetailsPresenter(
     override fun onDestroy() {
         super.onDestroy()
         downloadManager.removeListener(this)
-        LibraryUpdateService.removeListener(this)
+        LibraryUpdateManager.removeListener(this)
     }
 
     fun fetchChapters(andTracking: Boolean = true) {

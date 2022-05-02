@@ -13,7 +13,7 @@ import eu.kanade.tachiyomi.data.download.DownloadServiceListener
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.data.download.model.DownloadQueue
 import eu.kanade.tachiyomi.data.library.LibraryServiceListener
-import eu.kanade.tachiyomi.data.library.LibraryUpdateService
+import eu.kanade.tachiyomi.data.library.LibraryUpdateManager
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.source.SourceManager
 import eu.kanade.tachiyomi.ui.base.presenter.BaseCoroutinePresenter
@@ -84,7 +84,7 @@ class RecentsPresenter(
         super.onCreate()
         downloadManager.addListener(this)
         DownloadService.addListener(this)
-        LibraryUpdateService.setListener(this)
+        LibraryUpdateManager.setListener(this)
         if (lastRecents != null) {
             if (recentItems.isEmpty()) {
                 recentItems = lastRecents ?: emptyList()
@@ -340,7 +340,7 @@ class RecentsPresenter(
     override fun onDestroy() {
         super.onDestroy()
         downloadManager.removeListener(this)
-        LibraryUpdateService.removeListener(this)
+        LibraryUpdateManager.removeListener(this)
         DownloadService.removeListener(this)
         lastRecents = recentItems
     }
@@ -398,7 +398,7 @@ class RecentsPresenter(
             manga == null -> {
                 presenterScope.launchUI { controller?.setRefreshing(false) }
             }
-            manga.source == LibraryUpdateService.STARTING_UPDATE_SOURCE -> {
+            manga.source == LibraryUpdateManager.STARTING_UPDATE_SOURCE -> {
                 presenterScope.launchUI { controller?.setRefreshing(true) }
             }
             else -> {

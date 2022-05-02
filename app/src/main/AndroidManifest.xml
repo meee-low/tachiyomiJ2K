@@ -219,9 +219,9 @@
             </intent-filter>
         </receiver>
 
-        <service
-            android:name=".data.library.LibraryUpdateService"
-            android:exported="false" />
+<!--        <service-->
+<!--            android:name=".data.library.LibraryUpdateService"-->
+<!--            android:exported="false" />-->
 
         <service
             android:name=".extension.ExtensionInstallService"
