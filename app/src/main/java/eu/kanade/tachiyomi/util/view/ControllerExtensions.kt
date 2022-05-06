@@ -747,7 +747,7 @@ val Controller.fullAppBarHeightAndPadding: Int?
     get() = (activity as? MainActivity)?.bigToolbarHeight(
         (this as? FloatingSearchInterface)?.showFloatingBar() == true,
         this is TabbedInterface,
-        this !is SmallToolbarInterface
+        this !is SmallToolbarInterface,
     )?.plus(activityBinding?.appBar?.paddingTop ?: 0)
 
 val Controller.isControllerVisible: Boolean

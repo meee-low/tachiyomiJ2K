@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import com.bluelinelabs.conductor.ControllerChangeHandler
 import com.bluelinelabs.conductor.ControllerChangeType
@@ -28,6 +29,7 @@ import eu.kanade.tachiyomi.util.view.activityBinding
 import eu.kanade.tachiyomi.util.view.backgroundColor
 import eu.kanade.tachiyomi.util.view.fullAppBarHeightAndPadding
 import eu.kanade.tachiyomi.util.view.setAppBarBG
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.distinctUntilChanged
 import nucleus.presenter.Presenter
 import kotlin.random.Random
@@ -75,6 +77,7 @@ abstract class BasicComposeController : BaseController<ComposeControllerBinding>
     var toolbarColorAnim: ValueAnimator? = null
     private val randomTag = Random.nextLong()
     var listState: LazyListState? = null
+    var composeScope: CoroutineScope? = null
 
     fun colorToolbar(isColored: Boolean) {
         isToolbarColor = isColored
@@ -89,7 +92,7 @@ abstract class BasicComposeController : BaseController<ComposeControllerBinding>
         val percent = ImageUtil.getPercentOfColor(
             activityBinding!!.appBar.backgroundColor ?: Color.TRANSPARENT,
             activity!!.getResourceColor(R.attr.colorSurface),
-            activity!!.getResourceColor(R.attr.colorPrimaryVariant)
+            activity!!.getResourceColor(R.attr.colorPrimaryVariant),
         )
         toolbarColorAnim = ValueAnimator.ofFloat(percent, isColored.toInt().toFloat())
         toolbarColorAnim?.addUpdateListener { valueAnimator ->
@@ -130,6 +133,7 @@ abstract class BasicComposeController : BaseController<ComposeControllerBinding>
 //        }
 
         binding.root.setContent {
+            composeScope = rememberCoroutineScope()
             val listState = rememberLazyListState()
             this.listState = listState
             var oldOffset = 0
@@ -148,7 +152,7 @@ abstract class BasicComposeController : BaseController<ComposeControllerBinding>
                         activityBinding!!.appBar.y -= diff.toFloat()
                         activityBinding?.appBar?.updateAppBarAfterY(
                             scrolledY,
-                            !listState.isScrollInProgress
+                            !listState.isScrollInProgress,
                         )
 
                         if (!isToolbarColor && (
@@ -162,7 +166,7 @@ abstract class BasicComposeController : BaseController<ComposeControllerBinding>
                             colorToolbar(true)
                         }
                         val notAtTop = !atTopOfRecyclerView(
-                            scrolledY
+                            scrolledY,
                         )
                         if (notAtTop != isToolbarColor) colorToolbar(notAtTop)
                     }
@@ -179,16 +183,16 @@ abstract class BasicComposeController : BaseController<ComposeControllerBinding>
         if (type.isEnter) {
             activityBinding?.appBar?.hideBigView(
                 this is SmallToolbarInterface,
-                setTitleAlpha = false // this !is MangaDetailsController
+                setTitleAlpha = false, // this !is MangaDetailsController
             )
             activityBinding?.appBar?.setToolbarModeBy(this)
             activityBinding?.appBar?.useTabsInPreLayout = this is TabbedInterface
             colorToolbar(isToolbarColor)
             activityBinding!!.toolbar.tag = randomTag
             activityBinding!!.toolbar.setOnClickListener {
-//                viewScope.launchUI {
-//                    listState?.animateScrollToItem(0)
-//                }
+                composeScope?.launchUI {
+                    listState?.animateScrollToItem(0)
+                }
             }
         } else {
             toolbarColorAnim?.cancel()

@@ -1,6 +1,7 @@
 package eu.kanade.presentation.components
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -33,7 +34,7 @@ fun LinkIcon(
         modifier = modifier.padding(4.dp),
     ) {
         Icon(
-            modifier = modifier,
+            modifier = modifier.size(24.dp),
             painter = painter,
             tint = MaterialTheme.colorScheme.primary,
             contentDescription = label,

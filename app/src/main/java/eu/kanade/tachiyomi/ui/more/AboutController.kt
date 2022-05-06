@@ -107,7 +107,7 @@ class AboutController : BasicComposeController() {
                 putString(BODY_KEY, body)
                 putString(URL_KEY, url)
                 putBoolean(IS_BETA, isBeta == true)
-            }
+            },
         )
 
         override fun onCreateDialog(savedViewState: Bundle?): Dialog {
@@ -123,7 +123,7 @@ class AboutController : BasicComposeController() {
                         R.string.new_beta_version_available
                     } else {
                         R.string.new_version_available
-                    }
+                    },
                 )
                 .setMessage(info)
                 .setPositiveButton(if (isOnA12) R.string.update else R.string.download) { _, _ ->
@@ -154,8 +154,8 @@ class AboutController : BasicComposeController() {
 
 /*
     /**
-     * Checks for new releases
-     */
+ * Checks for new releases
+ */
     private val updateChecker by lazy { AppUpdateChecker() }
 
     private val dateFormat: DateFormat by lazy {
@@ -249,8 +249,8 @@ class AboutController : BasicComposeController() {
     }
 
     /**
-     * Checks version and shows a user prompt if an update is available.
-     */
+ * Checks version and shows a user prompt if an update is available.
+ */
     private fun checkVersion() {
         val activity = activity ?: return
 

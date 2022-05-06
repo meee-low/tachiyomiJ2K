@@ -20,7 +20,7 @@ import eu.kanade.tachiyomi.R
 fun LogoHeader() {
     Column {
         Surface(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_tachij2k),

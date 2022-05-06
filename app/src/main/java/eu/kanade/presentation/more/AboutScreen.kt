@@ -5,6 +5,7 @@ import android.content.ClipboardManager
 import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -12,12 +13,12 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,16 +30,31 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.getSystemService
 import eu.kanade.presentation.components.LinkIcon
 import eu.kanade.presentation.components.PreferenceRow
+import eu.kanade.presentation.components.SwipeableSnackbarHost
 import eu.kanade.presentation.util.asAppBarPaddingValues
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.updater.RELEASE_URL
 import eu.kanade.tachiyomi.util.CrashLogUtil
 import kotlinx.coroutines.launch
+import java.util.Date
+
+@Preview
+@Composable
+fun AboutScreenPreview() {
+    AboutScreen(
+        rememberLazyListState(),
+        checkVersion = { },
+        getFormattedBuildTime = { Date().toString() },
+        onClickLicenses = { },
+        topPadding = { 40f },
+    )
+}
 
 @Composable
 fun AboutScreen(
@@ -55,17 +71,19 @@ fun AboutScreen(
 
     Scaffold(
         snackbarHost = {
-            SnackbarHost(
+            SwipeableSnackbarHost(
                 snackbarHostState,
-            ) { data ->
+            ) { data, modifier ->
                 Snackbar(
-                    modifier = Modifier
+                    modifier = modifier
                         .systemBarsPadding()
                         .padding(10.dp),
+                    dismissAction = { },
+                    dismissActionContentColor = MaterialTheme.colorScheme.inverseOnSurface,
                 ) {
                     Text(
                         text = data.visuals.message,
-                        color = MaterialTheme.colorScheme.inverseOnSurface
+                        color = MaterialTheme.colorScheme.inverseOnSurface,
                     )
                 }
             }
@@ -99,6 +117,7 @@ fun AboutScreen(
                                 coroutineScope.launch { // using the `coroutineScope` to `launch` showing the snackbar
                                     snackbarHostState.showSnackbar(
                                         context.getString(R.string._copied_to_clipboard, appInfo),
+                                        withDismissAction = true,
                                     )
                                 }
                             }
@@ -157,43 +176,71 @@ fun AboutScreen(
                 }
 
                 item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
-                    ) {
-                        LinkIcon(
-                            label = stringResource(R.string.website),
-                            painter = rememberVectorPainter(Icons.Outlined.Public),
-                            url = "https://tachiyomi.org",
-                        )
-                        LinkIcon(
-                            label = "Discord",
-                            painter = painterResource(R.drawable.ic_discord_24dp),
-                            url = "https://discord.gg/tachiyomi",
-                        )
-                        LinkIcon(
-                            label = "Twitter",
-                            painter = painterResource(R.drawable.ic_twitter_24dp),
-                            url = "https://twitter.com/tachiyomiorg",
-                        )
-                        LinkIcon(
-                            label = "Facebook",
-                            painter = painterResource(R.drawable.ic_facebook_24dp),
-                            url = "https://facebook.com/tachiyomiorg",
-                        )
-                        LinkIcon(
-                            label = "Reddit",
-                            painter = painterResource(R.drawable.ic_reddit_24dp),
-                            url = "https://www.reddit.com/r/Tachiyomi",
-                        )
-                        LinkIcon(
-                            label = "GitHub",
-                            painter = painterResource(R.drawable.ic_github_24dp),
-                            url = "https://github.com/Jays2Kings/tachiyomiJ2K",
-                        )
+                    if (context.resources.configuration.screenWidthDp >= (56 * 7)) {
+                        FullHorizontalRow {
+                            LinksFirstHalf()
+                            LinksSecondHalf()
+                        }
+                    } else {
+                        FullHorizontalRow { LinksFirstHalf() }
+                        FullHorizontalRow { LinksSecondHalf() }
                     }
                 }
             }
-        }
+        },
+    )
+}
+
+@Composable
+inline fun FullHorizontalRow(
+    content: @Composable RowScope.() -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+        content = content,
+    )
+}
+
+@Composable
+fun LinksFirstHalf() {
+    LinkIcon(
+        label = stringResource(R.string.website),
+        painter = rememberVectorPainter(Icons.Outlined.Public),
+        url = "https://tachiyomi.org",
+    )
+    LinkIcon(
+        label = "Discord",
+        painter = painterResource(R.drawable.ic_discord_24dp),
+        url = "https://discord.gg/tachiyomi",
+    )
+    LinkIcon(
+        label = "Twitter",
+        painter = painterResource(R.drawable.ic_twitter_24dp),
+        url = "https://twitter.com/tachiyomiorg",
+    )
+    LinkIcon(
+        label = "Facebook",
+        painter = painterResource(R.drawable.ic_facebook_24dp),
+        url = "https://facebook.com/tachiyomiorg",
+    )
+}
+
+@Composable
+fun LinksSecondHalf() {
+    LinkIcon(
+        label = "Reddit",
+        painter = painterResource(R.drawable.ic_reddit_24dp),
+        url = "https://www.reddit.com/r/Tachiyomi",
+    )
+    LinkIcon(
+        label = "GitHub",
+        painter = painterResource(R.drawable.ic_github_24dp),
+        url = "https://github.com/Jays2Kings/tachiyomiJ2K",
+    )
+    LinkIcon(
+        label = "Tachiyomi",
+        painter = painterResource(R.drawable.ic_tachi),
+        url = "https://github.com/tachiyomiorg",
     )
 }
