@@ -24,7 +24,7 @@ fun runCommand(command: String): String {
 }
 
 val supportedAbis = setOf("armeabi-v7a", "arm64-v8a", "x86")
-val composeVersion = "1.2.0-alpha08"
+val composeVersion = "1.2.1"
 
 android {
     compileSdk = AndroidVersions.compileSdk
@@ -128,18 +128,17 @@ android {
 
 dependencies {
     // Compose
-    implementation("androidx.activity:activity-compose:1.5.0-beta01")
+    implementation("androidx.activity:activity-compose:1.6.0-alpha03")
     implementation("androidx.compose.foundation:foundation:$composeVersion")
     implementation("androidx.compose.animation:animation:$composeVersion")
     implementation("androidx.compose.ui:ui:$composeVersion")
-    implementation("androidx.compose.ui:ui-tooling:$composeVersion")
     implementation("androidx.compose.material:material:$composeVersion")
-    implementation("androidx.compose.material3:material3:1.0.0-alpha10")
-    implementation("com.google.android.material:compose-theme-adapter-3:1.0.7")
+    implementation("androidx.compose.material3:material3:1.0.0-alpha11")
+    implementation("com.google.android.material:compose-theme-adapter-3:1.0.8")
     implementation("androidx.compose.material:material-icons-extended:$composeVersion")
-    implementation("com.google.accompanist:accompanist-webview:0.24.7-alpha")
-    debugImplementation("androidx.compose.ui:ui-tooling:1.1.1")
     implementation("androidx.compose.ui:ui-tooling-preview:1.1.1")
+    debugImplementation("androidx.compose.ui:ui-tooling:1.1.1")
+    implementation("com.google.accompanist:accompanist-webview:0.24.7-alpha")
 
     // Modified dependencies
     implementation("com.github.jays2kings:subsampling-scale-image-view:756849e") {
