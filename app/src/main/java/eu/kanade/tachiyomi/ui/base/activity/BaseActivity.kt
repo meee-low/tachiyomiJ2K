@@ -1,8 +1,11 @@
 package eu.kanade.tachiyomi.ui.base.activity
 
+import android.annotation.SuppressLint
 import android.content.res.Resources
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.BuildCompat
 import androidx.viewbinding.ViewBinding
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.ui.main.SearchActivity
@@ -10,6 +13,7 @@ import eu.kanade.tachiyomi.ui.security.SecureActivityDelegate
 import eu.kanade.tachiyomi.util.system.getThemeWithExtras
 import eu.kanade.tachiyomi.util.system.setThemeByPref
 import uy.kohesive.injekt.injectLazy
+import java.util.Locale
 
 abstract class BaseActivity<VB : ViewBinding> : AppCompatActivity() {
 
@@ -19,7 +23,11 @@ abstract class BaseActivity<VB : ViewBinding> : AppCompatActivity() {
 
     private var updatedTheme: Resources.Theme? = null
 
+    @SuppressLint("UnsafeOptInUsageError")
     override fun onCreate(savedInstanceState: Bundle?) {
+        if (!BuildCompat.isAtLeastT()) {
+            AppCompatDelegate.getApplicationLocales().get(0)?.let { Locale.setDefault(it) }
+        }
         updatedTheme = null
         setThemeByPref(preferences)
         super.onCreate(savedInstanceState)

@@ -49,9 +49,9 @@ class ExtensionHolder(view: View, val adapter: ExtensionAdapter) :
                 InstalledExtensionsOrder.RecentlyUpdated -> {
                     extensionUpdateDate(extension.pkgName)?.let {
                         binding.date.isVisible = true
-                        binding.date.text = itemView.context.getString(
+                        binding.date.text = itemView.context.timeSpanFromNow(
                             R.string.updated_,
-                            it.timeSpanFromNow,
+                            it,
                         )
                         infoText.add("")
                     }
@@ -59,9 +59,9 @@ class ExtensionHolder(view: View, val adapter: ExtensionAdapter) :
                 InstalledExtensionsOrder.RecentlyInstalled -> {
                     extensionInstallDate(extension.pkgName)?.let {
                         binding.date.isVisible = true
-                        binding.date.text = itemView.context.getString(
+                        binding.date.text = itemView.context.timeSpanFromNow(
                             R.string.installed_,
-                            it.timeSpanFromNow,
+                            it,
                         )
                         infoText.add("")
                     }

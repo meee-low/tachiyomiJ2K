@@ -201,7 +201,7 @@ class LibraryCategoryAdapter(val controller: LibraryController?) :
                         val history = db.getChapters(id).executeAsBlocking()
                         val last = history.maxOfOrNull { it.date_fetch }
                         if (last != null && last > 100) {
-                            context.getString(R.string.fetched_, last.timeSpanFromNow(context))
+                            context.timeSpanFromNow(R.string.fetched_, last)
                         } else {
                             "N/A"
                         }
@@ -211,7 +211,7 @@ class LibraryCategoryAdapter(val controller: LibraryController?) :
                         val history = db.getHistoryByMangaId(id).executeAsBlocking()
                         val last = history.maxOfOrNull { it.last_read }
                         if (last != null && last > 100) {
-                            context.getString(R.string.read_, last.timeSpanFromNow(context))
+                            context.timeSpanFromNow(R.string.read_, last)
                         } else {
                             "N/A"
                         }
@@ -235,10 +235,7 @@ class LibraryCategoryAdapter(val controller: LibraryController?) :
                     LibrarySort.LatestChapter -> {
                         val lastUpdate = item.manga.last_update
                         if (lastUpdate > 0) {
-                            context.getString(
-                                R.string.updated_,
-                                lastUpdate.timeSpanFromNow(context),
-                            )
+                            context.timeSpanFromNow(R.string.updated_, lastUpdate)
                         } else {
                             "N/A"
                         }
@@ -246,7 +243,7 @@ class LibraryCategoryAdapter(val controller: LibraryController?) :
                     LibrarySort.DateAdded -> {
                         val added = item.manga.date_added
                         if (added > 0) {
-                            context.getString(R.string.added_, added.timeSpanFromNow(context))
+                            context.timeSpanFromNow(R.string.added_, added)
                         } else {
                             "N/A"
                         }
