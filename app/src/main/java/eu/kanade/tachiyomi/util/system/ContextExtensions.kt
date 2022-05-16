@@ -494,10 +494,8 @@ val Context.systemLangContext: Context
         @BuildCompat.PrereleaseSdkCheck
         val systemLocale = if (BuildCompat.isAtLeastT()) {
             getSystemService<LocaleManager>()?.systemLocales?.get(0)
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            Resources.getSystem().configuration.locales.get(0)
         } else {
-            null
+            Resources.getSystem().configuration.locales.get(0)
         } ?: Locale.getDefault()
         configuration.setLocale(systemLocale)
         return createConfigurationContext(configuration)

@@ -143,79 +143,87 @@ class SettingsGeneralController : SettingsController() {
                 }
                 defaultValue = ""
             }
-            listPreference(activity) {
-                key = "language"
-                isPersistent = false
-                titleRes = R.string.language
-                val locales = mutableListOf<String>()
-                resources?.getXml(R.xml.locales_config).use { parser ->
-                    parser ?: return@use
-                    while (parser.next() != XmlResourceParser.END_DOCUMENT) {
-                        if (parser.eventType != XmlResourceParser.START_TAG) {
-                            continue
-                        }
-                        if (parser.name == "locale") {
-                            val locale = parser.getAttributeValue(
-                                "http://schemas.android.com/apk/res/android",
-                                "name",
-                            ) ?: continue
-                            locales.add(locale)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                listPreference(activity) {
+                    key = "language"
+                    isPersistent = false
+                    titleRes = R.string.language
+                    val locales = mutableListOf<String>()
+                    resources?.getXml(R.xml.locales_config).use { parser ->
+                        parser ?: return@use
+                        while (parser.next() != XmlResourceParser.END_DOCUMENT) {
+                            if (parser.eventType != XmlResourceParser.START_TAG) {
+                                continue
+                            }
+                            if (parser.name == "locale") {
+                                val locale = parser.getAttributeValue(
+                                    "http://schemas.android.com/apk/res/android",
+                                    "name",
+                                ) ?: continue
+                                locales.add(locale)
+                            }
                         }
                     }
-                }
-                val localesMap = locales.associateBy { Locale.forLanguageTag(it) }.toSortedMap { locale1, locale2 ->
-                    val l1 = locale1.getDisplayName(locale1)
-                        .replaceFirstChar { it.uppercase(locale1) }
-                    val l2 = locale2.getDisplayName(locale2)
-                        .replaceFirstChar { it.uppercase(locale2) }
-                    l1.compareToCaseInsensitiveNaturalOrder(l2)
-                }
-                val localArray = localesMap.keys.filterNotNull().toTypedArray()
-                val localeList = LocaleListCompat.create(*localArray)
-                val sysDef = context.systemLangContext.getString(R.string.system_default)
-                entries = listOf(sysDef) + localesMap.keys.map { locale ->
-                    locale.getDisplayName(locale).replaceFirstChar { it.uppercase(locale) }
-                }
-                entryValues = listOf("") + localesMap.values
-                defaultValue = ""
-                val locale = if (!BuildCompat.isAtLeastT()) {
-                    AppCompatDelegate.getApplicationLocales().getFirstMatch(locales.toTypedArray())
-                } else { // needed while the beta is still going
-                    context.getSystemService<LocaleManager>()?.applicationLocales?.getFirstMatch(locales.toTypedArray())
-                }
-                if (locale != null) {
-                    tempValue = localArray.indexOf(
-                        if (locales.contains(locale.toLanguageTag())) {
-                            locale
-                        } else {
-                            localeList.getFirstMatch(arrayOf(locale.toLanguageTag()))
-                        },
-                    ) + 1
-                    tempEntry = locale.getDisplayName(locale).replaceFirstChar { it.uppercase(locale) }
-                }
-
-                onChange {
-                    val value = it as String
-                    if (!BuildCompat.isAtLeastT()) {
-                        val appLocale: LocaleListCompat = if (value.isBlank()) {
-                            LocaleListCompat.getEmptyLocaleList()
-                        } else {
-                            LocaleListCompat.forLanguageTags(value)
+                    val localesMap = locales.associateBy { Locale.forLanguageTag(it) }
+                        .toSortedMap { locale1, locale2 ->
+                            val l1 = locale1.getDisplayName(locale1)
+                                .replaceFirstChar { it.uppercase(locale1) }
+                            val l2 = locale2.getDisplayName(locale2)
+                                .replaceFirstChar { it.uppercase(locale2) }
+                            l1.compareToCaseInsensitiveNaturalOrder(l2)
                         }
-                        AppCompatDelegate.setApplicationLocales(appLocale)
+                    val localArray = localesMap.keys.filterNotNull().toTypedArray()
+                    val localeList = LocaleListCompat.create(*localArray)
+                    val sysDef = context.systemLangContext.getString(R.string.system_default)
+                    entries = listOf(sysDef) + localesMap.keys.map { locale ->
+                        locale.getDisplayName(locale).replaceFirstChar { it.uppercase(locale) }
+                    }
+                    entryValues = listOf("") + localesMap.values
+                    defaultValue = ""
+                    val locale = if (!BuildCompat.isAtLeastT()) {
+                        AppCompatDelegate.getApplicationLocales()
+                            .getFirstMatch(locales.toTypedArray())
                     } else { // needed while the beta is still going
-                        val appLocale: LocaleList = if (value.isBlank()) {
-                            LocaleList.getEmptyLocaleList()
-                        } else {
-                            LocaleList.forLanguageTags(value)
-                        }
-                        context.getSystemService<LocaleManager>()?.applicationLocales = appLocale
+                        context.getSystemService<LocaleManager>()?.applicationLocales?.getFirstMatch(
+                            locales.toTypedArray()
+                        )
                     }
-                    true
+                    if (locale != null) {
+                        tempValue = localArray.indexOf(
+                            if (locales.contains(locale.toLanguageTag())) {
+                                locale
+                            } else {
+                                localeList.getFirstMatch(arrayOf(locale.toLanguageTag()))
+                            },
+                        ) + 1
+                        tempEntry =
+                            locale.getDisplayName(locale).replaceFirstChar { it.uppercase(locale) }
+                    }
+
+                    onChange {
+                        val value = it as String
+                        if (!BuildCompat.isAtLeastT()) {
+                            val appLocale: LocaleListCompat = if (value.isBlank()) {
+                                LocaleListCompat.getEmptyLocaleList()
+                            } else {
+                                LocaleListCompat.forLanguageTags(value)
+                            }
+                            AppCompatDelegate.setApplicationLocales(appLocale)
+                        } else { // needed while the beta is still going
+                            val appLocale: LocaleList = if (value.isBlank()) {
+                                LocaleList.getEmptyLocaleList()
+                            } else {
+                                LocaleList.forLanguageTags(value)
+                            }
+                            context.getSystemService<LocaleManager>()?.applicationLocales =
+                                appLocale
+                        }
+                        true
+                    }
                 }
-            }
-            if (!BuildCompat.isAtLeastT()) {
-                infoPreference(R.string.language_requires_app_restart)
+                if (!BuildCompat.isAtLeastT()) {
+                    infoPreference(R.string.language_requires_app_restart)
+                }
             }
         }
     }
