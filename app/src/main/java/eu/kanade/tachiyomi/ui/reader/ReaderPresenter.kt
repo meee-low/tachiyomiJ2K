@@ -339,14 +339,16 @@ class ReaderPresenter(
         return delegatedSource.pageNumber(url)?.minus(1)
     }
 
+    @Suppress("DEPRECATION")
     suspend fun loadChapterURL(url: Uri) {
         val host = url.host ?: return
+        val context = view ?: preferences.context
         val delegatedSource = sourceManager.getDelegatedSource(host) ?: error(
-            preferences.context.getString(R.string.source_not_installed),
+            context.getString(R.string.source_not_installed),
         )
         val chapterUrl = delegatedSource.chapterUrl(url)
         val sourceId = delegatedSource.delegate?.id ?: error(
-            preferences.context.getString(R.string.source_not_installed),
+            context.getString(R.string.source_not_installed),
         )
         if (chapterUrl != null) {
             val dbChapter = db.getChapters(chapterUrl).executeOnIO().find {
@@ -391,18 +393,18 @@ class ReaderPresenter(
                         delegatedSource.delegate!!,
                     ).first
                     chapterId = newChapters.find { it.url == chapter.url }?.id
-                        ?: error(preferences.context.getString(R.string.chapter_not_found))
+                        ?: error(context.getString(R.string.chapter_not_found))
                 } else {
                     chapter.date_fetch = Date().time
                     chapterId = db.insertChapter(chapter).executeOnIO().insertedId() ?: error(
-                        preferences.context.getString(R.string.unknown_error),
+                        context.getString(R.string.unknown_error),
                     )
                 }
                 withContext(Dispatchers.Main) {
                     init(manga, chapterId)
                 }
             }
-        } else error(preferences.context.getString(R.string.unknown_error))
+        } else error(context.getString(R.string.unknown_error))
     }
 
     /**

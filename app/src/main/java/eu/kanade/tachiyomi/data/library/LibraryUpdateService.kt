@@ -380,7 +380,7 @@ class LibraryUpdateService(
             val errorFile = writeErrorFile(failedUpdates).getUriCompat(this)
             notifier.showUpdateErrorNotification(failedUpdates.map { it.key.title }, errorFile)
         }
-        mangaShortcutManager.updateShortcuts()
+        mangaShortcutManager.updateShortcuts(this)
         failedUpdates.clear()
         notifier.cancelProgressNotification()
         if (runExtensionUpdatesAfter && !DownloadService.isRunning(this)) {
