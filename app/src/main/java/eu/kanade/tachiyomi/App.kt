@@ -7,6 +7,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.res.Configuration
 import android.os.Build
 import android.webkit.WebView
 import androidx.appcompat.app.AppCompatDelegate
@@ -40,6 +41,7 @@ import uy.kohesive.injekt.api.InjektScope
 import uy.kohesive.injekt.injectLazy
 import uy.kohesive.injekt.registry.default.DefaultRegistrar
 import java.security.Security
+import java.util.Locale
 
 // @ReportsCrashes(
 //    formUri = "https://collector.tracepot.com/e90773ff",
@@ -90,10 +92,13 @@ open class App : Application(), DefaultLifecycleObserver {
                 val notificationManager = NotificationManagerCompat.from(this)
                 if (enabled) {
                     disableIncognitoReceiver.register()
-                    val notification = notification(Notifications.CHANNEL_INCOGNITO_MODE) {
-                        val incogText = getString(R.string.incognito_mode)
+                    val configuration = Configuration(resources.configuration)
+                    configuration.setLocale(Locale.getDefault())
+                    val nContext = createConfigurationContext(configuration)
+                    val notification = nContext.notification(Notifications.CHANNEL_INCOGNITO_MODE) {
+                        val incogText = nContext.getString(R.string.incognito_mode)
                         setContentTitle(incogText)
-                        setContentText(getString(R.string.turn_off_, incogText))
+                        setContentText(nContext.getString(R.string.turn_off_, incogText))
                         setSmallIcon(R.drawable.ic_incognito_24dp)
                         setOngoing(true)
 
