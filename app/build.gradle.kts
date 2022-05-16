@@ -26,7 +26,8 @@ fun runCommand(command: String): String {
 val supportedAbis = setOf("armeabi-v7a", "arm64-v8a", "x86")
 
 android {
-    compileSdk = AndroidVersions.compileSdk
+//    compileSdk = AndroidVersions.compileSdk
+    compileSdkPreview = "Tiramisu"
     ndkVersion = AndroidVersions.ndk
 
     defaultConfig {
