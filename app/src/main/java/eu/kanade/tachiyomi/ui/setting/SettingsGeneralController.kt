@@ -149,6 +149,7 @@ class SettingsGeneralController : SettingsController() {
                     isPersistent = false
                     titleRes = R.string.language
                     val locales = mutableListOf<String>()
+                    val availLocales = Locale.getAvailableLocales()
                     resources?.getXml(R.xml.locales_config).use { parser ->
                         parser ?: return@use
                         while (parser.next() != XmlResourceParser.END_DOCUMENT) {
@@ -160,7 +161,9 @@ class SettingsGeneralController : SettingsController() {
                                     "http://schemas.android.com/apk/res/android",
                                     "name",
                                 ) ?: continue
-                                locales.add(locale)
+                                if (availLocales.contains(Locale.forLanguageTag(locale))) {
+                                    locales.add(locale)
+                                }
                             }
                         }
                     }
@@ -185,7 +188,7 @@ class SettingsGeneralController : SettingsController() {
                             .getFirstMatch(locales.toTypedArray())
                     } else { // needed while the beta is still going
                         context.getSystemService<LocaleManager>()?.applicationLocales?.getFirstMatch(
-                            locales.toTypedArray()
+                            locales.toTypedArray(),
                         )
                     }
                     if (locale != null) {

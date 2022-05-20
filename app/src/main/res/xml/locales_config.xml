@@ -47,6 +47,7 @@
     <locale android:name="te"/>
     <locale android:name="th"/>
     <locale android:name="ti"/>
+    <locale android:name="tl"/>
     <locale android:name="tr"/>
     <locale android:name="uk"/>
     <locale android:name="vi"/>
