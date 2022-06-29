@@ -1,15 +1,12 @@
 package eu.kanade.tachiyomi.ui.setting
 
-import android.app.LocaleManager
 import android.content.Intent
 import android.content.res.XmlResourceParser
 import android.os.Build
 import android.os.Bundle
-import android.os.LocaleList
 import android.provider.Settings
 import android.view.View
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.content.getSystemService
 import androidx.core.os.BuildCompat
 import androidx.core.os.LocaleListCompat
 import androidx.preference.PreferenceScreen
@@ -183,14 +180,8 @@ class SettingsGeneralController : SettingsController() {
                     }
                     entryValues = listOf("") + localesMap.values
                     defaultValue = ""
-                    val locale = if (!BuildCompat.isAtLeastT()) {
-                        AppCompatDelegate.getApplicationLocales()
-                            .getFirstMatch(locales.toTypedArray())
-                    } else { // needed while the beta is still going
-                        context.getSystemService<LocaleManager>()?.applicationLocales?.getFirstMatch(
-                            locales.toTypedArray(),
-                        )
-                    }
+                    val locale = AppCompatDelegate.getApplicationLocales()
+                        .getFirstMatch(locales.toTypedArray())
                     if (locale != null) {
                         tempValue = localArray.indexOf(
                             if (locales.contains(locale.toLanguageTag())) {
@@ -205,22 +196,12 @@ class SettingsGeneralController : SettingsController() {
 
                     onChange {
                         val value = it as String
-                        if (!BuildCompat.isAtLeastT()) {
-                            val appLocale: LocaleListCompat = if (value.isBlank()) {
-                                LocaleListCompat.getEmptyLocaleList()
-                            } else {
-                                LocaleListCompat.forLanguageTags(value)
-                            }
-                            AppCompatDelegate.setApplicationLocales(appLocale)
-                        } else { // needed while the beta is still going
-                            val appLocale: LocaleList = if (value.isBlank()) {
-                                LocaleList.getEmptyLocaleList()
-                            } else {
-                                LocaleList.forLanguageTags(value)
-                            }
-                            context.getSystemService<LocaleManager>()?.applicationLocales =
-                                appLocale
+                        val appLocale: LocaleListCompat = if (value.isBlank()) {
+                            LocaleListCompat.getEmptyLocaleList()
+                        } else {
+                            LocaleListCompat.forLanguageTags(value)
                         }
+                        AppCompatDelegate.setApplicationLocales(appLocale)
                         true
                     }
                 }
