@@ -20,12 +20,12 @@ class LibraryBadge @JvmOverloads constructor(context: Context, attrs: AttributeS
     MaterialCardView(context, attrs) {
 
     private lateinit var binding: UnreadDownloadBadgeBinding
+    private val ogRadius = 9f.dpToPx
 
     override fun onFinishInflate() {
         super.onFinishInflate()
         binding = UnreadDownloadBadgeBinding.bind(this)
-
-        shapeAppearanceModel = makeShapeCorners(radius, radius)
+        shapeAppearanceModel = makeShapeCorners(ogRadius, ogRadius)
     }
 
     fun setUnreadDownload(
@@ -103,16 +103,16 @@ class LibraryBadge @JvmOverloads constructor(context: Context, attrs: AttributeS
         val visibleChildren: List<View> = (0 until binding.cardConstraint.childCount).mapNotNull {
             binding.cardConstraint.getChildAt(it)
         }.filter { it.isVisible }
-        shapeAppearanceModel = shapeAppearanceModel.withCornerSize(radius)
+        shapeAppearanceModel = shapeAppearanceModel.withCornerSize(ogRadius)
         if (changeShape) {
             if (visibleChildren.size == 1 && binding.unreadText.isVisible && unread == -1) {
                 binding.unreadText.setBackgroundColor(unreadBadgeBackground)
-                shapeAppearanceModel = shapeAppearanceModel.withCornerSize(radius)
+                shapeAppearanceModel = shapeAppearanceModel.withCornerSize(ogRadius)
             } else {
-                shapeAppearanceModel = makeShapeCorners(radius, radius)
+                shapeAppearanceModel = makeShapeCorners(ogRadius, ogRadius)
                 visibleChildren.forEachIndexed { index, view ->
-                    val startRadius = if (index == 0) radius else 0f
-                    val endRadius = if (index == visibleChildren.size - 1) radius else 0f
+                    val startRadius = if (index == 0) ogRadius else 0f
+                    val endRadius = if (index == visibleChildren.size - 1) ogRadius else 0f
                     val bgColor = when (view) {
                         binding.downloadText -> context.getResourceColor(R.attr.colorTertiary)
                         binding.unreadText -> unreadBadgeBackground
@@ -169,7 +169,7 @@ class LibraryBadge @JvmOverloads constructor(context: Context, attrs: AttributeS
         binding.unreadText.isVisible = inLibrary
         binding.unreadText.text = resources.getText(R.string.in_library)
         binding.unreadText.background =
-            MaterialShapeDrawable(makeShapeCorners(radius, radius)).apply {
+            MaterialShapeDrawable(makeShapeCorners(ogRadius, ogRadius)).apply {
                 this.fillColor =
                     ColorStateList.valueOf(context.getResourceColor(R.attr.colorSecondary))
             }
