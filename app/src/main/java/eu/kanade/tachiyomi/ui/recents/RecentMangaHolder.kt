@@ -131,7 +131,7 @@ class RecentMangaHolder(
                     }
                 } else {
                     context.timeSpanFromNow(string.fetched_, item.chapter.date_fetch) + "\n" +
-                            context.timeSpanFromNow(string.updated_, item.chapter.date_upload)
+                        context.timeSpanFromNow(string.updated_, item.chapter.date_upload)
                 }
                 context.timeSpanFromNow(string.updated_, item.chapter.date_upload)
             }
