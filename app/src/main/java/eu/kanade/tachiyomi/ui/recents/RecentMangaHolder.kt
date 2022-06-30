@@ -133,7 +133,6 @@ class RecentMangaHolder(
                     context.timeSpanFromNow(R.string.fetched_, item.chapter.date_fetch) + "\n" +
                         context.timeSpanFromNow(R.string.updated_, item.chapter.date_upload)
                 }
-                context.timeSpanFromNow(R.string.updated_, item.chapter.date_upload)
             }
             item.chapter.id != item.mch.chapter.id -> context.timeSpanFromNow(R.string.read_, item.mch.history.last_read) +
                 "\n" + binding.body.context.getString(
