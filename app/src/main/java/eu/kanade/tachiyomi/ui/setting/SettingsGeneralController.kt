@@ -197,8 +197,12 @@ class SettingsGeneralController : SettingsController() {
                     onChange {
                         val value = it as String
                         val appLocale: LocaleListCompat = if (value.isBlank()) {
+                            preferences.appLanguage().delete()
                             LocaleListCompat.getEmptyLocaleList()
                         } else {
+                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                                preferences.appLanguage().set(value)
+                            }
                             LocaleListCompat.forLanguageTags(value)
                         }
                         AppCompatDelegate.setApplicationLocales(appLocale)

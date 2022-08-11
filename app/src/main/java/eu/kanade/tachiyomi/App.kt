@@ -7,7 +7,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.res.Configuration
 import android.os.Build
 import android.webkit.WebView
 import androidx.appcompat.app.AppCompatDelegate
@@ -27,6 +26,7 @@ import eu.kanade.tachiyomi.ui.security.SecureActivityDelegate
 import eu.kanade.tachiyomi.ui.source.SourcePresenter
 import eu.kanade.tachiyomi.util.manga.MangaCoverMetadata
 import eu.kanade.tachiyomi.util.system.AuthenticatorUtil
+import eu.kanade.tachiyomi.util.system.localeContext
 import eu.kanade.tachiyomi.util.system.notification
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -41,7 +41,6 @@ import uy.kohesive.injekt.api.InjektScope
 import uy.kohesive.injekt.injectLazy
 import uy.kohesive.injekt.registry.default.DefaultRegistrar
 import java.security.Security
-import java.util.Locale
 
 // @ReportsCrashes(
 //    formUri = "https://collector.tracepot.com/e90773ff",
@@ -92,9 +91,7 @@ open class App : Application(), DefaultLifecycleObserver {
                 val notificationManager = NotificationManagerCompat.from(this)
                 if (enabled) {
                     disableIncognitoReceiver.register()
-                    val configuration = Configuration(resources.configuration)
-                    configuration.setLocale(Locale.getDefault())
-                    val nContext = createConfigurationContext(configuration)
+                    val nContext = localeContext
                     val notification = nContext.notification(Notifications.CHANNEL_INCOGNITO_MODE) {
                         val incogText = nContext.getString(R.string.incognito_mode)
                         setContentTitle(incogText)

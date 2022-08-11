@@ -45,6 +45,7 @@ import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.widget.CustomLayoutPickerActivity
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import uy.kohesive.injekt.injectLazy
 import java.io.File
 import java.util.Locale
 import kotlin.math.max
@@ -486,6 +487,23 @@ fun Context.getApplicationIcon(pkgName: String): Drawable? {
         null
     }
 }
+
+/** Context used for notifications as Appcompat app lang does not support notifications */
+val Context.localeContext: Context
+    get() {
+        val prefsLang by lazy {
+            val pref by injectLazy<PreferencesHelper>()
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU && pref.appLanguage().isSet()) {
+                Locale.forLanguageTag(pref.appLanguage().get())
+            } else null
+        }
+        val configuration = Configuration(resources.configuration)
+        configuration.setLocale(
+            prefsLang ?: AppCompatDelegate.getApplicationLocales()[0]
+                ?: Locale.getDefault(),
+        )
+        return createConfigurationContext(configuration)
+    }
 
 val Context.systemLangContext: Context
     get() {

@@ -44,6 +44,7 @@ import eu.kanade.tachiyomi.util.system.ImageUtil
 import eu.kanade.tachiyomi.util.system.executeOnIO
 import eu.kanade.tachiyomi.util.system.launchIO
 import eu.kanade.tachiyomi.util.system.launchUI
+import eu.kanade.tachiyomi.util.system.localeContext
 import eu.kanade.tachiyomi.util.system.toInt
 import eu.kanade.tachiyomi.util.system.withUIContext
 import kotlinx.coroutines.CoroutineScope
@@ -825,7 +826,7 @@ class ReaderPresenter(
         val manga = manga ?: return
         val context = Injekt.get<Application>()
 
-        val notifier = SaveImageNotifier(context)
+        val notifier = SaveImageNotifier(context.localeContext)
         notifier.onClear()
 
         // Pictures directory.
@@ -860,7 +861,7 @@ class ReaderPresenter(
             val manga = manga ?: return@launch
             val context = Injekt.get<Application>()
 
-            val notifier = SaveImageNotifier(context)
+            val notifier = SaveImageNotifier(context.localeContext)
             notifier.onClear()
 
             // Pictures directory.
