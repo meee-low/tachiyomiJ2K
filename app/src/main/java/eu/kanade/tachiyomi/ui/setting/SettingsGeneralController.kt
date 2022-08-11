@@ -13,6 +13,7 @@ import androidx.preference.PreferenceScreen
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.updater.AutoAppUpdaterJob
+import eu.kanade.tachiyomi.util.lang.addBetaTag
 import eu.kanade.tachiyomi.util.lang.compareToCaseInsensitiveNaturalOrder
 import eu.kanade.tachiyomi.util.system.systemLangContext
 import java.util.Locale
@@ -144,7 +145,14 @@ class SettingsGeneralController : SettingsController() {
                 listPreference(activity) {
                     key = "language"
                     isPersistent = false
-                    titleRes = R.string.language
+                    title = context.getString(R.string.language).let {
+                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                            it.addBetaTag(context)
+                        } else {
+                            it
+                        }
+                    }
+                    dialogTitleRes = R.string.language
                     val locales = mutableListOf<String>()
                     val availLocales = Locale.getAvailableLocales()
                     resources?.getXml(R.xml.locales_config).use { parser ->
@@ -209,7 +217,7 @@ class SettingsGeneralController : SettingsController() {
                         true
                     }
                 }
-                if (!BuildCompat.isAtLeastT()) {
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
                     infoPreference(R.string.language_requires_app_restart)
                 }
             }
