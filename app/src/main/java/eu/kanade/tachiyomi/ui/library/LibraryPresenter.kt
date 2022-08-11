@@ -714,7 +714,7 @@ class LibraryPresenter(
                 }
                 BY_AUTHOR -> {
                     if (manga.artist.isNullOrBlank() && manga.author.isNullOrBlank()) {
-                        listOf(LibraryItem(manga, makeOrGetHeader(unknown)))
+                        listOf(LibraryItem(manga, makeOrGetHeader(unknown), viewContext))
                     } else {
                         listOfNotNull(
                             manga.author.takeUnless { it.isNullOrBlank() },
