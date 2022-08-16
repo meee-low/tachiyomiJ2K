@@ -142,7 +142,7 @@ internal class DownloadNotifier(private val context: Context) {
             }
 
             val downloadingProgressText =
-                context.getString(R.string.downloading_progress)
+                context.localeContext.getString(R.string.downloading_progress)
                     .format(download.downloadedImages, download.pages!!.size)
 
             if (preferences.hideNotificationContent()) {

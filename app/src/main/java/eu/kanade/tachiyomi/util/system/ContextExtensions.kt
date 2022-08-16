@@ -18,6 +18,7 @@ import android.net.NetworkCapabilities
 import android.net.Uri
 import android.net.wifi.WifiManager
 import android.os.Build
+import android.os.Build.VERSION
 import android.os.PowerManager
 import android.provider.Settings
 import android.view.View
@@ -35,7 +36,6 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
-import androidx.core.os.BuildCompat
 import com.hippo.unifile.UniFile
 import com.nononsenseapps.filepicker.FilePickerActivity
 import eu.kanade.tachiyomi.R
@@ -508,11 +508,12 @@ val Context.systemLangContext: Context
     get() {
         val configuration = Configuration(resources.configuration)
 
-        @BuildCompat.PrereleaseSdkCheck
-        val systemLocale = if (BuildCompat.isAtLeastT()) {
+        val systemLocale = if (VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             getSystemService<LocaleManager>()?.systemLocales?.get(0)
-        } else {
+        } else if (VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             Resources.getSystem().configuration.locales.get(0)
+        } else {
+            return this
         } ?: Locale.getDefault()
         configuration.setLocale(systemLocale)
         return createConfigurationContext(configuration)

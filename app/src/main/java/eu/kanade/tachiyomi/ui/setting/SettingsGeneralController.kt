@@ -158,10 +158,7 @@ class SettingsGeneralController : SettingsController() {
                     resources?.getXml(R.xml.locales_config).use { parser ->
                         parser ?: return@use
                         while (parser.next() != XmlResourceParser.END_DOCUMENT) {
-                            if (parser.eventType != XmlResourceParser.START_TAG) {
-                                continue
-                            }
-                            if (parser.name == "locale") {
+                            if (parser.eventType == XmlResourceParser.START_TAG && parser.name == "locale") {
                                 val locale = parser.getAttributeValue(
                                     "http://schemas.android.com/apk/res/android",
                                     "name",
