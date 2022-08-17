@@ -1,11 +1,10 @@
 package eu.kanade.tachiyomi.ui.base.activity
 
-import android.annotation.SuppressLint
 import android.content.res.Resources
+import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.os.BuildCompat
 import androidx.viewbinding.ViewBinding
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.ui.main.SearchActivity
@@ -23,9 +22,8 @@ abstract class BaseActivity<VB : ViewBinding> : AppCompatActivity() {
 
     private var updatedTheme: Resources.Theme? = null
 
-    @SuppressLint("UnsafeOptInUsageError")
     override fun onCreate(savedInstanceState: Bundle?) {
-        if (!BuildCompat.isAtLeastT()) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             AppCompatDelegate.getApplicationLocales().get(0)?.let { Locale.setDefault(it) }
         }
         updatedTheme = null

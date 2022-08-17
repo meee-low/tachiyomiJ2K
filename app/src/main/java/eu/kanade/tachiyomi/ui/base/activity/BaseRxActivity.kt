@@ -1,10 +1,9 @@
 package eu.kanade.tachiyomi.ui.base.activity
 
-import android.annotation.SuppressLint
 import android.content.res.Resources
+import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.os.BuildCompat
 import androidx.lifecycle.lifecycleScope
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.ui.base.presenter.BasePresenter
@@ -21,9 +20,8 @@ abstract class BaseRxActivity<P : BasePresenter<*>> : NucleusAppCompatActivity<P
     private val preferences by injectLazy<PreferencesHelper>()
     private var updatedTheme: Resources.Theme? = null
 
-    @SuppressLint("UnsafeOptInUsageError")
     override fun onCreate(savedInstanceState: Bundle?) {
-        if (!BuildCompat.isAtLeastT()) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             AppCompatDelegate.getApplicationLocales().get(0)?.let { Locale.setDefault(it) }
         }
         updatedTheme = null
