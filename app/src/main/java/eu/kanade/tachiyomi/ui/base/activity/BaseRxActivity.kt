@@ -1,18 +1,16 @@
 package eu.kanade.tachiyomi.ui.base.activity
 
 import android.content.res.Resources
-import android.os.Build
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.lifecycleScope
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.ui.base.presenter.BasePresenter
 import eu.kanade.tachiyomi.ui.security.SecureActivityDelegate
 import eu.kanade.tachiyomi.util.system.getThemeWithExtras
+import eu.kanade.tachiyomi.util.system.setLocaleByAppCompat
 import eu.kanade.tachiyomi.util.system.setThemeByPref
 import nucleus.view.NucleusAppCompatActivity
 import uy.kohesive.injekt.injectLazy
-import java.util.Locale
 
 abstract class BaseRxActivity<P : BasePresenter<*>> : NucleusAppCompatActivity<P>() {
 
@@ -21,9 +19,7 @@ abstract class BaseRxActivity<P : BasePresenter<*>> : NucleusAppCompatActivity<P
     private var updatedTheme: Resources.Theme? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            AppCompatDelegate.getApplicationLocales().get(0)?.let { Locale.setDefault(it) }
-        }
+        setLocaleByAppCompat()
         updatedTheme = null
         setThemeByPref(preferences)
         super.onCreate(savedInstanceState)

@@ -18,7 +18,6 @@ import android.net.NetworkCapabilities
 import android.net.Uri
 import android.net.wifi.WifiManager
 import android.os.Build
-import android.os.Build.VERSION
 import android.os.PowerManager
 import android.provider.Settings
 import android.view.View
@@ -504,13 +503,19 @@ val Context.localeContext: Context
         return createConfigurationContext(configuration)
     }
 
+fun setLocaleByAppCompat() {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+        AppCompatDelegate.getApplicationLocales().get(0)?.let { Locale.setDefault(it) }
+    }
+}
+
 val Context.systemLangContext: Context
     get() {
         val configuration = Configuration(resources.configuration)
 
-        val systemLocale = if (VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        val systemLocale = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             getSystemService<LocaleManager>()?.systemLocales?.get(0)
-        } else if (VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             Resources.getSystem().configuration.locales.get(0)
         } else {
             return this

@@ -1,15 +1,13 @@
 package eu.kanade.tachiyomi.ui.base.activity
 
 import android.content.res.Resources
-import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.util.system.getThemeWithExtras
+import eu.kanade.tachiyomi.util.system.setLocaleByAppCompat
 import eu.kanade.tachiyomi.util.system.setThemeByPref
 import uy.kohesive.injekt.injectLazy
-import java.util.Locale
 
 abstract class BaseThemedActivity : AppCompatActivity() {
 
@@ -17,9 +15,7 @@ abstract class BaseThemedActivity : AppCompatActivity() {
     private var updatedTheme: Resources.Theme? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            AppCompatDelegate.getApplicationLocales().get(0)?.let { Locale.setDefault(it) }
-        }
+        setLocaleByAppCompat()
         updatedTheme = null
         setThemeByPref(preferences)
         super.onCreate(savedInstanceState)
