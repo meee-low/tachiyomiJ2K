@@ -224,6 +224,12 @@ class LibraryCategoryAdapter(val controller: LibraryController?) :
                             "N/A"
                         }
                     }
+                    LibrarySort.NextUnread -> {
+                        val id = item.manga.id ?: return ""
+                        val unreadChapters = db.getUnreadChapters(id).executeAsBlocking()
+                        val last = unreadChapters.minOfOrNull { it.date_upload }
+                        context.timeSpanFromNow(R.string.next_unread_chapter_, last ?: 0)
+                    }
                     LibrarySort.LatestChapter -> {
                         context.timeSpanFromNow(R.string.updated_, item.manga.last_update)
                     }
