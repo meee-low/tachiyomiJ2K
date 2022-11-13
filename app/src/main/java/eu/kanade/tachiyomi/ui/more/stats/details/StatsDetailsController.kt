@@ -57,13 +57,13 @@ import eu.kanade.tachiyomi.util.system.toInt
 import eu.kanade.tachiyomi.util.system.toLocalCalendar
 import eu.kanade.tachiyomi.util.system.toUtcCalendar
 import eu.kanade.tachiyomi.util.system.withIOContext
-import eu.kanade.tachiyomi.util.system.withUIContext
 import eu.kanade.tachiyomi.util.view.backgroundColor
 import eu.kanade.tachiyomi.util.view.compatToolTipText
 import eu.kanade.tachiyomi.util.view.doOnApplyWindowInsetsCompat
 import eu.kanade.tachiyomi.util.view.isControllerVisible
 import eu.kanade.tachiyomi.util.view.liftAppbarWith
 import eu.kanade.tachiyomi.util.view.setOnQueryTextChangeListener
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.Calendar
@@ -90,6 +90,7 @@ class StatsDetailsController :
      * Selected day in the read duration stat
      */
     private var highlightedDay: Calendar? = null
+    private var jobReadDuration: Job? = null
 
     /**
      * Returns the toolbar title to show when this controller is attached.
@@ -161,7 +162,9 @@ class StatsDetailsController :
                 if (presenter.selectedSeriesType.isNotEmpty()) {
                     presenter.selectedSeriesType = mutableSetOf()
                     chipSeriesType.reset(R.string.series_type)
-                } else chipSeriesType.callOnClick()
+                } else {
+                    chipSeriesType.callOnClick()
+                }
             }
             chipSource.setOnClickListener {
                 (it as Chip).setMultiChoiceItemsDialog(
@@ -175,7 +178,9 @@ class StatsDetailsController :
                 if (presenter.selectedSource.isNotEmpty()) {
                     presenter.selectedSource = mutableSetOf()
                     chipSource.reset(R.string.source)
-                } else chipSource.callOnClick()
+                } else {
+                    chipSource.callOnClick()
+                }
             }
             chipStatus.setOnClickListener {
                 (it as Chip).setMultiChoiceItemsDialog(
@@ -189,7 +194,9 @@ class StatsDetailsController :
                 if (presenter.selectedStatus.isNotEmpty()) {
                     presenter.selectedStatus = mutableSetOf()
                     chipStatus.reset(R.string.status)
-                } else chipStatus.callOnClick()
+                } else {
+                    chipStatus.callOnClick()
+                }
             }
             chipLanguage.setOnClickListener {
                 (it as Chip).setMultiChoiceItemsDialog(
@@ -203,7 +210,9 @@ class StatsDetailsController :
                 if (presenter.selectedLanguage.isNotEmpty()) {
                     presenter.selectedLanguage = mutableSetOf()
                     chipLanguage.reset(R.string.language)
-                } else chipLanguage.callOnClick()
+                } else {
+                    chipLanguage.callOnClick()
+                }
             }
             chipCategory.setOnClickListener {
                 (it as Chip).setMultiChoiceItemsDialog(
@@ -217,7 +226,9 @@ class StatsDetailsController :
                 if (presenter.selectedCategory.isNotEmpty()) {
                     presenter.selectedCategory = mutableSetOf()
                     chipCategory.reset(R.string.category)
-                } else chipCategory.callOnClick()
+                } else {
+                    chipCategory.callOnClick()
+                }
             }
             statSort.setOnClickListener {
                 searchView.clearFocus()
@@ -234,7 +245,7 @@ class StatsDetailsController :
 
                         dialog.dismiss()
                         presenter.sortCurrentStats()
-                        resetLayout(updateChipsVisibility = false, resetReadDuration = false)
+                        resetLayout()
                         updateStats()
                     }
                     .setNegativeButton(android.R.string.cancel, null)
@@ -254,15 +265,15 @@ class StatsDetailsController :
                 dialog.addOnPositiveButtonClickListener { utcMillis ->
                     binding.progress.isVisible = true
                     viewScope.launch {
-                        withIOContext {
-                            presenter.updateReadDurationPeriod(
-                                utcMillis.first.toLocalCalendar()?.timeInMillis ?: utcMillis.first,
-                                utcMillis.second.toLocalCalendar()?.timeInMillis
-                                    ?: utcMillis.second,
-                            )
-                        }
+                        presenter.updateReadDurationPeriod(
+                            utcMillis.first.toLocalCalendar()?.timeInMillis ?: utcMillis.first,
+                            utcMillis.second.toLocalCalendar()?.timeInMillis
+                                ?: utcMillis.second,
+                        )
+                        withIOContext { presenter.updateMangaHistory() }
                         binding.statsDateText.text = presenter.getPeriodString()
                         statsBarChart.highlightValues(null)
+                        highlightedDay = null
                         presenter.getStatisticData()
                     }
                 }
@@ -328,63 +339,58 @@ class StatsDetailsController :
     /**
      * Changes dates of the read duration stat with the arrows
      * @param referenceDate date used to determine if should change week
-     * @param weeksToAdd number of weeks to add or remove
+     * @param toAdd whether to add or remove
      */
-    private fun changeDatesReadDurationWithArrow(referenceDate: Calendar, weeksToAdd: Int) {
+    private fun changeDatesReadDurationWithArrow(referenceDate: Calendar, toAdd: Int) {
+        jobReadDuration?.cancel()
         with(binding) {
             if (highlightedDay == null) {
-                changeWeekReadDuration(weeksToAdd)
+                changeReadDurationPeriod(toAdd)
             } else {
-                val newDaySelected = highlightedDay?.get(Calendar.DAY_OF_MONTH)
-                val endDay = referenceDate.get(Calendar.DAY_OF_MONTH)
+                val daySelected = highlightedDay?.get(Calendar.DAY_OF_YEAR)
+                val endDay = referenceDate.get(Calendar.DAY_OF_YEAR)
                 statsBarChart.highlightValues(null)
-                if (newDaySelected == endDay) {
-                    changeWeekReadDuration(weeksToAdd)
-                    if (!statsBarChart.isVisible) {
-                        highlightedDay = null
-                        return
-                    }
-                }
                 highlightedDay = Calendar.getInstance().apply {
                     timeInMillis = highlightedDay!!.timeInMillis
-                    add(Calendar.DAY_OF_WEEK, weeksToAdd)
+                    add(Calendar.DAY_OF_YEAR, toAdd)
                 }
-                val highlightValue = presenter.historyByDayAndManga.keys.toTypedArray()
-                    .indexOfFirst { it.get(Calendar.DAY_OF_MONTH) == highlightedDay?.get(Calendar.DAY_OF_MONTH) }
-                if (highlightValue == -1) {
-                    highlightedDay = null
-                    changeDatesReadDurationWithArrow(referenceDate, weeksToAdd)
-                    return
+                if (daySelected == endDay) {
+                    changeReadDurationPeriod(toAdd)
+                } else {
+                    updateHighlightedValue()
                 }
-                statsBarChart.highlightValue(highlightValue.toFloat(), 0)
-                statsBarChart.marker.refreshContent(
-                    statsBarChart.data.dataSets[0].getEntryForXValue(highlightValue.toFloat(), 0f),
-                    statsBarChart.getHighlightByTouchPoint(highlightValue.toFloat(), 0f),
-                )
             }
         }
     }
 
     /**
      * Changes week of the read duration stat
-     * @param weeksToAdd number of weeks to add or remove
+     * @param toAdd whether to add or remove
      */
-    private fun changeWeekReadDuration(weeksToAdd: Int) {
-        if (weeksToAdd > 0) {
-            presenter.startDate.apply {
-                time = presenter.endDate.time
-                add(Calendar.DAY_OF_YEAR, 1)
-            }
-        } else {
-            presenter.startDate.apply {
-                add(Calendar.WEEK_OF_YEAR, -1)
-            }
-        }
+    private fun changeReadDurationPeriod(toAdd: Int) {
+        val millionSeconds = presenter.endDate.timeInMillis - presenter.startDate.timeInMillis
+        val days = TimeUnit.MILLISECONDS.toDays(millionSeconds) + 1
+        presenter.startDate.add(Calendar.DAY_OF_YEAR, toAdd * days.toInt())
+        presenter.updateReadDurationPeriod(presenter.startDate.timeInMillis, days.toInt())
         binding.progress.isVisible = true
-        viewScope.launchIO {
-            presenter.updateReadDurationPeriod(presenter.startDate.timeInMillis)
-            withUIContext { binding.statsDateText.text = presenter.getPeriodString() }
+        jobReadDuration = viewScope.launchIO {
+            presenter.updateMangaHistory()
             presenter.getStatisticData()
+        }
+    }
+
+    private fun updateHighlightedValue() {
+        with(binding) {
+            val highlightValue = presenter.historyByDayAndManga.keys.toTypedArray().indexOfFirst {
+                it.get(Calendar.DAY_OF_YEAR) == highlightedDay?.get(Calendar.DAY_OF_YEAR) &&
+                    it.get(Calendar.YEAR) == highlightedDay?.get(Calendar.YEAR)
+            }
+            if (highlightValue == -1) return
+            statsBarChart.highlightValue(highlightValue.toFloat(), 0)
+            statsBarChart.marker.refreshContent(
+                statsBarChart.data.dataSets[0].getEntryForXValue(highlightValue.toFloat(), 0f),
+                statsBarChart.getHighlightByTouchPoint(highlightValue.toFloat(), 0f),
+            )
         }
     }
 
@@ -466,7 +472,7 @@ class StatsDetailsController :
      */
     private fun resetAndSetup(
         updateChipsVisibility: Boolean = true,
-        resetReadDuration: Boolean = updateChipsVisibility,
+        resetReadDuration: Boolean = true,
     ) {
         resetLayout(updateChipsVisibility, resetReadDuration)
         presenter.getStatisticData()
@@ -487,7 +493,7 @@ class StatsDetailsController :
      * @param updateChipsVisibility whether to update the chips visibility
      * @param resetReadDuration whether to reset the read duration values
      */
-    private fun resetLayout(updateChipsVisibility: Boolean = false, resetReadDuration: Boolean = updateChipsVisibility) {
+    private fun resetLayout(updateChipsVisibility: Boolean = false, resetReadDuration: Boolean = false) {
         with(binding) {
             progress.isVisible = true
             scrollView.isInvisible = true
@@ -519,6 +525,7 @@ class StatsDetailsController :
                 statsPieChart.isVisible = false
                 statsBarChart.isVisible = false
                 statsLineChart.isVisible = false
+                highlightedDay = null
             } else {
                 binding.noChartData.hide()
                 handleLayout()
@@ -526,6 +533,7 @@ class StatsDetailsController :
             scrollView.isVisible = true
             progress.isVisible = false
             totalDurationStatsText.text = adapter?.list?.sumOf { it.readDuration }?.getReadDuration()
+            if (highlightedDay != null) updateHighlightedValue() else statsDateText.text = presenter.getPeriodString()
         }
     }
 
@@ -545,7 +553,10 @@ class StatsDetailsController :
             chipCategory.isVisible = presenter.selectedStat !in listOf(Stats.CATEGORY, Stats.READ_DURATION) &&
                 presenter.categoriesStats.size > 1
             statSort.isVisible = presenter.selectedStat !in listOf(
-                Stats.SCORE, Stats.LENGTH, Stats.START_YEAR, Stats.READ_DURATION,
+                Stats.SCORE,
+                Stats.LENGTH,
+                Stats.START_YEAR,
+                Stats.READ_DURATION,
             )
         }
     }
@@ -606,7 +617,9 @@ class StatsDetailsController :
         val neverSelect = alwaysShowIcon || sizeStat == 0
         setTextColor(if (neverSelect) emptyTextColor else emptyBackColor)
         chipBackgroundColor = ColorStateList.valueOf(if (neverSelect) emptyBackColor else filteredBackColor)
-        closeIcon = if (neverSelect) context.contextCompatDrawable(R.drawable.ic_arrow_drop_down_24dp) else {
+        closeIcon = if (neverSelect) {
+            context.contextCompatDrawable(R.drawable.ic_arrow_drop_down_24dp)
+        } else {
             context.contextCompatDrawable(R.drawable.ic_close_24dp)
         }
         closeIconTint = ColorStateList.valueOf(if (neverSelect) emptyTextColor else emptyBackColor)
@@ -641,7 +654,9 @@ class StatsDetailsController :
         val pieEntries = presenter.currentStats?.map {
             val progress = if (presenter.selectedStatsSort == StatsSort.COUNT_DESC) {
                 it.count
-            } else it.chaptersRead
+            } else {
+                it.chaptersRead
+            }
             PieEntry(progress.toFloat(), it.label)
         }
 
