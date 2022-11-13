@@ -5,7 +5,7 @@ object AndroidVersions {
     const val versionCode = 97
     const val versionName = "1.5.9"
     const val ndk = "23.1.7779620"
-    const val kotlin = "1.6.21"
+    const val kotlin = "1.7.20"
 }
 
 object Plugins {
@@ -17,7 +17,7 @@ object Plugins {
     const val jetbrainsKotlin = "org.jetbrains.kotlin.android"
     const val kotlinSerialization = "org.jetbrains.kotlin.plugin.serialization"
     val gradleVersions = PluginClass("com.github.ben-manes.versions", "0.42.0")
-    val kotlinter = PluginClass("org.jmailen.kotlinter", "3.10.0")
+    val kotlinter = PluginClass("org.jmailen.kotlinter", "3.12.0")
 }
 
 data class PluginClass(val name: String, val version: String) {
